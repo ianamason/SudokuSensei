@@ -1,11 +1,18 @@
-# SudukoSolver
+# SudukoSensei
 
-A simple sudoku puzzle solver using the new python bindings for yices.
+
+This started out as a simple sudoku puzzle solver using the new python bindings for yices.
+The bindings are no longer new, so I am moving on to using unsat cores to gives hints etc.
+
+It thus is currently a work in progress.
+
+Probably going to try and beef it up a little so that I can use it (and thus test it a bit better)
+
 
 ## Prerequisites
 
 You will need to install [yices](https://github.com/SRI-CSL/yices2) which can be done by building from source,
-or using apt on linux (from our PPA) or homebrew on a mac, the [README.md](https://github.com/SRI-CSL/yices2/blob/master/README.md) 
+or using apt on linux (from our PPA) or homebrew on a mac, the [README.md](https://github.com/SRI-CSL/yices2/blob/master/README.md)
 there describes the process.
 
 You will also need the python bindings:
@@ -33,6 +40,6 @@ You can also ask for the number of solutions, but if there are more than 64 we d
 
 ## Acknowledgments
 
-This project was built on top of the nice python [tutorial](http://newcoder.io/gui/) by [Lynn Root](http://www.roguelynn.com/)
+This project was built on top of the nice python [tutorial](http://newcoder.io/gui/) by [@econchic](http://www.roguelynn.com/)
 who is hereby thanked. The tutorial is under the creative commons [license](https://creativecommons.org/licenses/by-sa/3.0/deed.en_US) which does
 not appear to be an option in GitHub's license widget, so if this is a problem let me know.
