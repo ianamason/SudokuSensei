@@ -1,10 +1,11 @@
-"""SudokuSolver is the interface with teh Yices2 SMT solver."""
-
-from SudokuBoard import SudokuBoard
-
-from Constants import ALEPH_NOUGHT
+"""SudokuSolver is the interface with the Yices2 SMT solver."""
 
 from yices import Context, Model, Terms, Types, Status, Yices
+
+from .SudokuBoard import SudokuBoard
+
+from .Constants import ALEPH_NOUGHT
+
 
 class SudokuSolver:
 

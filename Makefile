@@ -7,34 +7,33 @@ help:
 	@echo ''
 	@echo 'Here are the targets:'
 	@echo ''
-	@echo 'To start from scratch  :    "make empty"'
-	@echo 'To run debug           :    "make debug"'
-	@echo 'To run n00b            :    "make n00b"'
-	@echo 'To run l33t            :    "make l33t"'
-	@echo 'To run error           :    "make error"'
-	@echo 'To pylint (errors)     :    "make lint"'
-	@echo 'To pylint (all)        :    "make lint_all"'
+	@echo 'To develop                :    "make develop"'
+	@echo ''
+	@echo 'To pylint (errors)        :    "make lint"'
+	@echo 'To pylint (all)           :    "make lint_all"'
+	@echo 'To update the README.rst  :    "make rstify"'
+
 	@echo ''
 
-empty:
-	./sudokusolver
 
-debug:
-	./sudokusolver --board debug
 
-n00b:
-	./sudokusolver --board n00b
+#local editable install for developing
+develop:
+	pip install -e .
 
-l33t:
-	./sudokusolver --board l33t
+MD2RST = $(shell which mdToRst)
 
-error:
-	./sudokusolver --board error
+check_md2rst:
+ifeq ($(MD2RST),)
+	$(error rstify target requires mdToRst)
+endif
 
+rstify: check_md2rst
+	mdToRst README.md > README.rst
 
 
 clean:
-	rm -rf  *.pyc *~ __pycache__
+	rm -rf  *.pyc *~ */*~ __pycache__
 
 PYLINT = $(shell which pylint)
 
@@ -47,10 +46,10 @@ endif
 
 lint: check_lint
 # for detecting just errors:
-	@ $(PYLINT) -E  *.py
+	@ $(PYLINT) -E  sudoku/*.py *.py
 
 lint_all: check_lint
 # for detecting more than just errors:
-	@ $(PYLINT) --rcfile=.pylintrc *.py
+	@ $(PYLINT) --rcfile=.pylintrc  sudoku/*.py *.py
 
-.PHONY: lint check_lint
+.PHONY: lint check_lint rstify check_md2rst

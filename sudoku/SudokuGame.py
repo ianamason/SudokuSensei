@@ -11,8 +11,8 @@
 # All changes are recorded in the git commits.
 #
 
-from SudokuBoard import SudokuBoard
-from SudokuSolver import SudokuSolver
+from .SudokuBoard import SudokuBoard
+from .SudokuSolver import SudokuSolver
 
 
 class SudokuGame:

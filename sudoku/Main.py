@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-
+"""Main is the pip entry point."""
 # The non-yices portions of this code base come from:
 #
 # http://newcoder.io/gui/
@@ -13,14 +11,15 @@
 # All changes are recorded in the git commits.
 #
 
-import argparse
-import sys
-
 from tkinter import Tk
 
-from Constants import BOARDS, WIDTH, HEIGHT
-from SudokuGame import SudokuGame
-from SudokuUI import SudokuUI
+import argparse
+import sys
+import pkg_resources as pkg
+
+from .Constants import BOARDS, WIDTH, HEIGHT
+from .SudokuGame import SudokuGame
+from .SudokuUI import SudokuUI
 
 
 def parse_arguments():
@@ -30,8 +29,8 @@ def parse_arguments():
     Where `board name` must be in the `BOARD` list
     """
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--board",
-                            help="Desired board name",
+    arg_parser.add_argument('--board',
+                            help='Desired board name',
                             type=str,
                             choices=BOARDS,
                             required=False)
@@ -42,14 +41,17 @@ def parse_arguments():
 
 
 
-if __name__ == '__main__':
 
+def main():
+    """main is the pip entry point."""
     try:
 
         board_name = parse_arguments()
 
+        board_file = pkg.resource_filename('sudoku', f'data/{board_name}.sudoku')
+
         if board_name is not None:
-            board_fp = open('data/%s.sudoku' % board_name, 'r')
+            board_fp = open(board_file, 'r')
         else:
             board_fp = None
 

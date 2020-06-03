@@ -11,7 +11,7 @@
 # All changes are recorded in the git commits.
 #
 
-from SudokuError import SudokuError
+from .SudokuError import SudokuError
 
 
 

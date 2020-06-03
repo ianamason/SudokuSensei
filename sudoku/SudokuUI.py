@@ -13,7 +13,7 @@
 
 from tkinter import Canvas, Frame, Button, BOTH, TOP, LEFT
 
-from Constants import WIDTH, HEIGHT, MARGIN, SIDE, PAD, ALEPH_NOUGHT
+from .Constants import WIDTH, HEIGHT, MARGIN, SIDE, PAD, ALEPH_NOUGHT
 
 class SudokuUI(Frame): # pylint: disable=R0901
     """
@@ -29,7 +29,7 @@ class SudokuUI(Frame): # pylint: disable=R0901
         self.__init_ui()
 
     def __init_ui(self):
-        self.parent.title("Sudoku")
+        self.parent.title('Sudoku Sensei')
         self.pack(fill=BOTH)
         self.canvas = Canvas(self,
                              width=WIDTH,
@@ -161,7 +161,7 @@ class SudokuUI(Frame): # pylint: disable=R0901
         if MARGIN < x < WIDTH - MARGIN and MARGIN < y < HEIGHT - MARGIN:
             self.canvas.focus_set()
 
-            # get row and col numbers from x,y coordinates (iam 06/03/2020: which are now floats so need to be rounded down)
+            # get row and col numbers from x,y coordinates
             row, col = (y - MARGIN) // SIDE, (x - MARGIN) // SIDE
 
             # if cell was selected already - deselect it
