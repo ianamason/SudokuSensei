@@ -162,7 +162,7 @@ class SudokuUI(Frame): # pylint: disable=R0901
             self.canvas.focus_set()
 
             # get row and col numbers from x,y coordinates (iam 06/03/2020: which are now floats so need to be rounded down)
-            row, col = int((y - MARGIN) / SIDE), int((x - MARGIN) / SIDE)
+            row, col = (y - MARGIN) // SIDE, (x - MARGIN) // SIDE
 
             # if cell was selected already - deselect it
             if (row, col) == (self.row, self.col):
