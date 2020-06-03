@@ -1,11 +1,12 @@
+"""SudokuSolver is the interface with teh Yices2 SMT solver."""
 
 from SudokuBoard import SudokuBoard
 
 from Constants import ALEPH_NOUGHT
 
-from yices import *
+from yices import Context, Model, Terms, Types, Status, Yices
 
-class SudokuSolver(object):
+class SudokuSolver:
 
     """
     The Sudoku Solver, will solve when asked.
@@ -17,77 +18,72 @@ class SudokuSolver(object):
     def __init__(self, game):
         self.game = game
         # the matrix of uninterpreted terms
-        self.variables = self.__createVariables()
+        self.variables = self.__create_variables()
         # the numerals as yices constants
-        self.numerals = self.__createNumerals()
-        # the yices configuration for puzzle solving
-        self.config = Config()
-        # is push and pop the default (yes; had to look at the source though.)
-        self.config.default_config_for_logic("QF_LIA")
+        self.numerals = self.__create_numerals()
         # the context (a set/stack of yices assertions)
-        self.context = Context(self.config)
+        self.context = Context()
         # add the generic constraints (corresponding to the rules of the game)
-        self.__generateConstraints()
+        self.__generate_constraints()
 
 
-    # would take some (unnecessary) effort to hook these in somewhere
-    def __cleanUp(self):
+    # how to hook this in somewhere?
+    def __clean_up(self):
         self.context.dispose()
-        self.config.dispose()
         Yices.exit()
 
 
-    def __createVariables(self):
+    def __create_variables(self): # pylint: disable=R0201
         """Creates the matrix of uninterpreted terms that represents the logical view of the board."""
         int_t = Types.int_type()
-        variables = SudokuBoard.newBoard()
-        for i in xrange(9):
-            for j in xrange(9):
+        variables = SudokuBoard.new_board()
+        for i in range(9):
+            for j in range(9):
                 variables[i][j] = Terms.new_uninterpreted_term(int_t)
         return variables
 
-    def __createNumerals(self):
+    def __create_numerals(self): # pylint: disable=R0201
         """Creates a mapping from digits to yices constants for those digits."""
         numerals = {}
-        for i in xrange(1, 10):
+        for i in range(1, 10):
             numerals[i] = Terms.integer(i)
         return numerals
 
 
-    def __generateConstraints(self):
+    def __generate_constraints(self): # pylint: disable=R0201
         # each x is between 1 and 9
         def between_1_and_9(x):
-            return Terms.yor([Terms.eq(x, self.numerals[i+1]) for i in xrange(9)])
-        for i in xrange(9):
-            for j in xrange(9):
+            return Terms.yor([Terms.eq(x, self.numerals[i+1]) for i in range(9)])
+        for i in range(9):
+            for j in range(9):
                 self.context.assert_formula(between_1_and_9(self.variables[i][j]))
 
         # All elements in a row must be distinct
-        for i in xrange(9):
-            self.context.assert_formula(Terms.distinct([self.variables[i][j] for j in xrange(9)]))
+        for i in range(9):
+            self.context.assert_formula(Terms.distinct([self.variables[i][j] for j in range(9)]))
 
 
         # All elements in a column must be distinct
-        for i in xrange(9):
-            self.context.assert_formula(Terms.distinct([self.variables[j][i] for j in xrange(9)]))
+        for i in range(9):
+            self.context.assert_formula(Terms.distinct([self.variables[j][i] for j in range(9)]))
 
         # All elements in each 3x3 square must be distinct
-        for k in xrange(3):
-            for l in xrange(3):
-                self.context.assert_formula(Terms.distinct([self.variables[i + 3 * l][j + 3 * k] for i in xrange(3) for j in xrange(3)]))
+        for row in range(3):
+            for column in range(3):
+                self.context.assert_formula(Terms.distinct([self.variables[i + 3 * row][j + 3 * column] for i in range(3) for j in range(3)]))
 
 
-    def __addFacts(self):
+    def __add_facts(self):
         """Adds the facts gleaned from the current state of the puzzle."""
         def set_value(row, column, value):
-            assert 0 <= row and row < 9
-            assert 0 <= column and column < 9
-            assert 1 <= value and value <= 9
+            assert 0 <= row < 9
+            assert 0 <= column < 9
+            assert 1 <= value <= 9
             self.context.assert_formula(Terms.arith_eq_atom(self.variables[row][column], self.numerals[value]))
 
 
-        for i in xrange(9):
-            for j in xrange(9):
+        for i in range(9):
+            for j in range(9):
                 value = self.game.puzzle[i][j]
                 if value != 0:
                     set_value(i, j, value)
@@ -99,21 +95,21 @@ class SudokuSolver(object):
         #we use push and pop so that we can solve (variants) repeatedly without having to start from scratch each time.
         self.context.push()
 
-        self.__addFacts()
+        self.__add_facts()
 
         smt_stat = self.context.check_context(None)
 
         if smt_stat != Status.SAT:
-            print 'No solution: smt_stat = {0}\n'.format(smt_stat)
+            print(f'No solution: smt_stat = {smt_stat}')
         else:
             #get the model
             model = Model.from_context(self.context, 1)
 
             #return the model as a board with ONLY the newly found values inserted.
-            solution = SudokuBoard.newBoard()
+            solution = SudokuBoard.new_board()
 
-            for i in xrange(9):
-                for j in xrange(9):
+            for i in range(9):
+                for j in range(9):
                     if self.game.puzzle[i][j] == 0:
                         solution[i][j] = model.get_value(self.variables[i][j])
 
@@ -125,25 +121,21 @@ class SudokuSolver(object):
 
     #we could contrast the following with the  yices_assert_blocking_clause
 
-    def countModels(self):
-
+    def count_models(self):
+        """count_model returns the number of distinct solutions/models to the current problem."""
         def model2term(model):
             termlist = []
-            for i in xrange(9):
-                for j in xrange(9):
+            for i in range(9):
+                for j in range(9):
                     if self.game.puzzle[i][j] == 0:
                         val = model.get_value(self.variables[i][j])
                         var = self.variables[i][j]
                         value = self.numerals[val]
                         termlist.append(Terms.arith_eq_atom(var, value))
             return Terms.yand(termlist)
-
         result = 0
-
         self.context.push()
-
-        self.__addFacts()
-
+        self.__add_facts()
         while  self.context.check_context(None) == Status.SAT:
             model = Model.from_context(self.context, 1)
             diagram = model2term(model)
@@ -152,7 +144,5 @@ class SudokuSolver(object):
             result += 1
             if result == ALEPH_NOUGHT:
                 break
-
         self.context.pop()
-
         return result

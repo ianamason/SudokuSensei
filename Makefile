@@ -34,7 +34,7 @@ error:
 
 
 clean:
-	rm -f  *.pyc *~
+	rm -rf  *.pyc *~ __pycache__
 
 PYLINT = $(shell which pylint)
 

@@ -1,3 +1,4 @@
+"""SudokuError are errors that pertain to the game of Sudoku."""
 # The non-yices portions of this code base come from:
 #
 # http://newcoder.io/gui/
@@ -14,4 +15,3 @@ class SudokuError(Exception):
     """
     An application specific error.
     """
-    pass

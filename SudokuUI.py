@@ -1,3 +1,4 @@
+"""SudokuUI is the main frame of the game. """
 # The non-yices portions of this code base come from:
 #
 # http://newcoder.io/gui/
@@ -10,11 +11,11 @@
 # All changes are recorded in the git commits.
 #
 
-from Tkinter import Canvas, Frame, Button, BOTH, TOP, BOTTOM, LEFT, RIGHT
+from tkinter import Canvas, Frame, Button, BOTH, TOP, LEFT
 
 from Constants import WIDTH, HEIGHT, MARGIN, SIDE, PAD, ALEPH_NOUGHT
 
-class SudokuUI(Frame):
+class SudokuUI(Frame): # pylint: disable=R0901
     """
     The Tkinter UI, responsible for drawing the board and accepting user input.
     """
@@ -25,9 +26,9 @@ class SudokuUI(Frame):
 
         self.row, self.col = -1, -1
 
-        self.__initUI()
+        self.__init_ui()
 
-    def __initUI(self):
+    def __init_ui(self):
         self.parent.title("Sudoku")
         self.pack(fill=BOTH)
         self.canvas = Canvas(self,
@@ -36,13 +37,13 @@ class SudokuUI(Frame):
         self.canvas.pack(fill=BOTH, side=TOP)
 
         clear_puzzle_button = Button(self,
-                              text="Clear Puzzle",
-                              command=self.__clear_puzzle)
+                                     text="Clear Puzzle",
+                                     command=self.__clear_puzzle)
         clear_puzzle_button.pack(side=LEFT, padx=PAD)
 
         clear_solution_button = Button(self,
-                              text="Clear Solution",
-                              command=self.__clear_solution)
+                                       text="Clear Solution",
+                                       command=self.__clear_solution)
         clear_solution_button.pack(side=LEFT, padx=PAD)
 
         solve_button = Button(self,
@@ -65,7 +66,7 @@ class SudokuUI(Frame):
         """
         Draws grid divided with blue lines into 3x3 squares
         """
-        for i in xrange(10):
+        for i in range(10):
             color = "blue" if i % 3 == 0 else "gray"
 
             x0 = MARGIN + i * SIDE
@@ -82,8 +83,8 @@ class SudokuUI(Frame):
 
     def __draw_puzzle(self):
         self.canvas.delete("numbers")
-        for i in xrange(9):
-            for j in xrange(9):
+        for i in range(9):
+            for j in range(9):
                 answer = self.game.puzzle[i][j]
                 if answer != 0:
                     x = MARGIN + j * SIDE + SIDE / 2
@@ -115,7 +116,7 @@ class SudokuUI(Frame):
                 outline="red", tags="cursor"
             )
 
-    def __drawMessage(self, tag, textstr, fillc, outlinec):
+    def __draw_message(self, tag, textstr, fillc, outlinec):
         # create a oval (which will be a circle)
         x0 = y0 = MARGIN + SIDE * 2
         x1 = y1 = MARGIN + SIDE * 7
@@ -133,14 +134,14 @@ class SudokuUI(Frame):
 
 
     def __draw_victory(self):
-        self.__drawMessage("victory", "You win!", "dark orange", "orange")
+        self.__draw_message("victory", "You win!", "dark orange", "orange")
 
 
     def __draw_no_solution(self):
-        self.__drawMessage("failure", "No Solution!", "dark red", "red")
+        self.__draw_message("failure", "No Solution!", "dark red", "red")
 
     def __draw_solution_count(self):
-        count = self.game.countSolutions()
+        count = self.game.count_solutions()
         if count == 0:
             text = "No solutions."
         elif count == 1:
@@ -150,7 +151,7 @@ class SudokuUI(Frame):
         else:
             text = ">= {0} solutions".format(count)
 
-        self.__drawMessage("count", text, "dark green", "green")
+        self.__draw_message("count", text, "dark green", "green")
 
 
     def __cell_clicked(self, event):
@@ -160,8 +161,8 @@ class SudokuUI(Frame):
         if MARGIN < x < WIDTH - MARGIN and MARGIN < y < HEIGHT - MARGIN:
             self.canvas.focus_set()
 
-            # get row and col numbers from x,y coordinates
-            row, col = (y - MARGIN) / SIDE, (x - MARGIN) / SIDE
+            # get row and col numbers from x,y coordinates (iam 06/03/2020: which are now floats so need to be rounded down)
+            row, col = int((y - MARGIN) / SIDE), int((x - MARGIN) / SIDE)
 
             # if cell was selected already - deselect it
             if (row, col) == (self.row, self.col):

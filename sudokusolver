@@ -16,7 +16,7 @@
 import argparse
 import sys
 
-from Tkinter import Tk
+from tkinter import Tk
 
 from Constants import BOARDS, WIDTH, HEIGHT
 from SudokuGame import SudokuGame

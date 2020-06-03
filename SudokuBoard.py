@@ -1,3 +1,4 @@
+"""SudokuBoard is a simple representation of the board."""
 # The non-yices portions of this code base come from:
 #
 # http://newcoder.io/gui/
@@ -14,29 +15,26 @@ from SudokuError import SudokuError
 
 
 
-class SudokuBoard(object):
+class SudokuBoard:
     """
     Sudoku Board representation
 
     """
 
     @staticmethod
-    def newBoard():
+    def new_board():
         """Creates an empty board, with all entries being 0."""
         board = [0] * 9
-        for i in xrange(9):
+        for i in range(9):
             board[i] = [0] * 9
         return board
-
-
 
     def __init__(self, board_fp):
         self.board = self.__create_board(board_fp)
 
+    def __create_board(self, board_fp):  # pylint: disable=R0201
 
-    def __create_board(self, board_fp):
-
-        board = SudokuBoard.newBoard()
+        board = SudokuBoard.new_board()
 
         if board_fp is None:
             return board
@@ -58,7 +56,7 @@ class SudokuBoard(object):
                     )
                 #not sure why pylint gets confused here; it doesn't complain about
                 #the same idiom in bug.py
-                board[row][column] = int(char)
+                board[row][column] = int(char)  # pylint: disable=E1137
                 column += 1
             row += 1
             column = 0

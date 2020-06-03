@@ -1,3 +1,4 @@
+"""SudokuGame maintains state and enforces the rules of the game."""
 # The non-yices portions of this code base come from:
 #
 # http://newcoder.io/gui/
@@ -10,14 +11,11 @@
 # All changes are recorded in the git commits.
 #
 
-import sys
-
-
 from SudokuBoard import SudokuBoard
 from SudokuSolver import SudokuSolver
 
 
-class SudokuGame(object):
+class SudokuGame:
     """
     A Sudoku game, in charge of storing the state of the board and checking
     whether the puzzle is completed.
@@ -33,39 +31,44 @@ class SudokuGame(object):
         self.solver = SudokuSolver(self)
 
     def start(self):
+        """start commences a new game."""
         self.game_over = False
-        self.puzzle = SudokuBoard.newBoard()
+        self.puzzle = SudokuBoard.new_board()
         self.solution = None
-        for i in xrange(9):
-            for j in xrange(9):
+        for i in range(9):
+            for j in range(9):
                 self.puzzle[i][j] = self.start_puzzle[i][j]
 
     def solve(self):
+        """solve uses the SMT solver to solve the current game."""
         self.solution = self.solver.solve()
-        return True if self.solution else False
+        return self.solution is not None
 
-    def countSolutions(self):
-        return self.solver.countModels()
+    def count_solutions(self):
+        """count_solutions returns the number of distinct solutions to the current board."""
+        return self.solver.count_models()
 
     def clear_solution(self):
+        """clear_solution resets the solution."""
         self.solution = None
 
 
     def check_win(self):
-        for row in xrange(9):
+        """check_win determines if the current game has been solved."""
+        for row in range(9):
             if not self.__check_row(row):
                 return False
-        for column in xrange(9):
+        for column in range(9):
             if not self.__check_column(column):
                 return False
-        for row in xrange(3):
-            for column in xrange(3):
+        for row in range(3):
+            for column in range(3):
                 if not self.__check_square(row, column):
                     return False
         self.game_over = True
         return True
 
-    def __check_block(self, block):
+    def __check_block(self, block): # pylint: disable=R0201
         return set(block) == set(range(1, 10))
 
     def __check_row(self, row):
@@ -73,14 +76,14 @@ class SudokuGame(object):
 
     def __check_column(self, column):
         return self.__check_block(
-            [self.puzzle[row][column] for row in xrange(9)]
+            [self.puzzle[row][column] for row in range(9)]
         )
 
     def __check_square(self, row, column):
         return self.__check_block(
             [
                 self.puzzle[r][c]
-                for r in xrange(row * 3, (row + 1) * 3)
-                for c in xrange(column * 3, (column + 1) * 3)
+                for r in range(row * 3, (row + 1) * 3)
+                for c in range(column * 3, (column + 1) * 3)
             ]
         )

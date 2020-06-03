@@ -1,3 +1,4 @@
+"""A collection of constants needed for the UI mainly."""
 # The non-yices portions of this code base come from:
 #
 # http://newcoder.io/gui/
