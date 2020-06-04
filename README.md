@@ -51,7 +51,10 @@ not appear to be an option in GitHub's license widget, consequently I choose the
 ## References
 
 
-[The Math behind Sudoku](http://pi.math.cornell.edu/~mec/Summer2009/Mahmood/Intro.html)
-[Graphical User Interfaces](http://newcoder.io/gui/)
-[Arel's Sudoku Generator](https://github.com/arel/arels-sudoku-generator.git)
-[Generating difficult Sudoku puzzles quickly](https://dlbeer.co.nz/articles/sudoku.html)
+* [The Math behind Sudoku](http://pi.math.cornell.edu/~mec/Summer2009/Mahmood/Intro.html)
+
+* [Graphical User Interfaces](http://newcoder.io/gui/)
+
+* [Arel's Sudoku Generator](https://github.com/arel/arels-sudoku-generator.git)
+
+* [Generating difficult Sudoku puzzles quickly](https://dlbeer.co.nz/articles/sudoku.html)
