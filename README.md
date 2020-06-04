@@ -45,9 +45,13 @@ You can also ask for the number of solutions, but if there are more than 64 we d
 
 This project was built on top of the nice python [tutorial](http://newcoder.io/gui/) by [@econchic](http://www.roguelynn.com/)
 who is hereby thanked. The tutorial is under the creative commons [license](https://creativecommons.org/licenses/by-sa/3.0/deed.en_US) which does
-not appear to be an option in GitHub's license widget, so if this is a problem let me know.
+not appear to be an option in GitHub's license widget, consequently I choose the nearest one I could, if this is a problem let me know.
 
 
 ## References
 
+
 [The Math behind Sudoku](http://pi.math.cornell.edu/~mec/Summer2009/Mahmood/Intro.html)
+[Graphical User Interfaces](http://newcoder.io/gui/)
+[Arel's Sudoku Generator](https://github.com/arel/arels-sudoku-generator.git)
+[Generating difficult Sudoku puzzles quickly](https://dlbeer.co.nz/articles/sudoku.html)

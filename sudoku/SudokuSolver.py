@@ -88,6 +88,7 @@ class SudokuSolver:
                 value = self.game.puzzle[i][j]
                 if value != 0:
                     set_value(i, j, value)
+
     def solve(self):
 
         """Attempts to solve the puzzle, returning either None if there is no solution, or a board with the correct MISSING entries."""

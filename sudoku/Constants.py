@@ -13,7 +13,7 @@
 
 
 # Available sudoku boards
-BOARDS = ['debug', 'n00b', 'l33t', 'error', 'escargot']
+BOARDS = ['debug', 'n00b', 'l33t', 'error', 'escargot', 'extreme1', 'extreme2', 'extreme3', 'extreme4']
 
 # Pixels around the board
 MARGIN = 20
