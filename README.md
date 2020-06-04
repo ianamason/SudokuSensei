@@ -58,3 +58,5 @@ not appear to be an option in GitHub's license widget, consequently I choose the
 * [Arel's Sudoku Generator](https://github.com/arel/arels-sudoku-generator.git)
 
 * [Generating difficult Sudoku puzzles quickly](https://dlbeer.co.nz/articles/sudoku.html)
+
+* [Norvig's Sudoku Page](http://norvig.com/sudoku.html)
