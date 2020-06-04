@@ -1,3 +1,5 @@
+[![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-blueviolet.svg)](https://creativecommons.org/licenses/by/4.0/)
+
 # SudukoSensei
 
 
@@ -19,8 +21,9 @@ You will also need the python bindings:
 ```
 pip install yices
 ```
+You need a newish Python, I use the new format strings, so you will need at least 3.6.
 
-## Usage
+## Usage (out of date)
 
 So not a lot of brain power was spent making this a watertight work. But if you start of with an empty board
 ```
@@ -43,3 +46,8 @@ You can also ask for the number of solutions, but if there are more than 64 we d
 This project was built on top of the nice python [tutorial](http://newcoder.io/gui/) by [@econchic](http://www.roguelynn.com/)
 who is hereby thanked. The tutorial is under the creative commons [license](https://creativecommons.org/licenses/by-sa/3.0/deed.en_US) which does
 not appear to be an option in GitHub's license widget, so if this is a problem let me know.
+
+
+## References
+
+[The Math behind Sudoku](http://pi.math.cornell.edu/~mec/Summer2009/Mahmood/Intro.html)
