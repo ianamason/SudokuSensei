@@ -11,7 +11,7 @@
 # All changes are recorded in the git commits.
 #
 
-from tkinter import Canvas, Frame, Button, BOTH, TOP, LEFT
+from tkinter import Canvas, Frame, Button, BOTH, TOP, LEFT, messagebox
 
 from .Constants import WIDTH, HEIGHT, MARGIN, SIDE, PAD, ALEPH_NOUGHT
 
@@ -52,9 +52,14 @@ class SudokuUI(Frame): # pylint: disable=R0901
         solve_button.pack(side=LEFT, padx=PAD)
 
         count_button = Button(self,
-                              text="Count Solutions",
+                              text="#Solutions",
                               command=self.__count_solutions)
         count_button.pack(side=LEFT, padx=PAD)
+
+        hint_button = Button(self,
+                             text="Hint",
+                             command=self.__display_hint)
+        hint_button.pack(side=LEFT, padx=PAD)
 
         self.__draw_grid()
         self.__draw_puzzle()
@@ -105,6 +110,7 @@ class SudokuUI(Frame): # pylint: disable=R0901
 
 
     def __draw_cursor(self):
+        #print(f'[{self.row}, {self.col}]')
         self.canvas.delete("cursor")
         if self.row >= 0 and self.col >= 0:
             x0 = MARGIN + self.col * SIDE + 1
@@ -209,3 +215,9 @@ class SudokuUI(Frame): # pylint: disable=R0901
     def __count_solutions(self):
         self.__draw_solution_count()
         self.__draw_puzzle()
+
+    def __display_hint(self):
+        self.row=8
+        self.col=0
+        self.__draw_cursor()
+        messagebox.showinfo("A Hint", "Coming soon")

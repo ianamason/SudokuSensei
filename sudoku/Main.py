@@ -56,15 +56,17 @@ def main():
             board_fp = None
 
         game = SudokuGame(board_fp)
+
+        if board_fp is not None:
+            board_fp.close()
+
         game.start()
 
         root = Tk()
         SudokuUI(root, game)
         root.geometry("{0}x{1}".format(WIDTH, HEIGHT + 40))
         root.mainloop()
-
-        if board_fp is not None:
-            board_fp.close()
+        game.dispose()
 
 
     except KeyboardInterrupt:

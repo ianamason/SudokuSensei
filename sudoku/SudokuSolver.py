@@ -29,9 +29,9 @@ class SudokuSolver:
 
 
     # how to hook this in somewhere?
-    def __clean_up(self):
+    def dispose(self):
         self.context.dispose()
-        Yices.exit()
+        Yices.exit(True)
 
 
     def __create_variables(self): # pylint: disable=R0201

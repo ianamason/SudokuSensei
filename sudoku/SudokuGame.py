@@ -44,6 +44,10 @@ class SudokuGame:
         self.solution = self.solver.solve()
         return self.solution is not None
 
+    def dispose(self):
+        print('Census:')
+        self.solver.dispose()
+
     def count_solutions(self):
         """count_solutions returns the number of distinct solutions to the current board."""
         return self.solver.count_models()
