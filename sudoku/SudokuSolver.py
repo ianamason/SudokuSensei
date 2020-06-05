@@ -1,8 +1,8 @@
 """SudokuSolver is the interface with the Yices2 SMT solver."""
 
-from yices import Context, Model, Terms, Types, Status, Yices
+from yices import Context, Model, Terms, Status, Yices
 
-from .SudokuLib import Puzzle, make_grid
+from .SudokuLib import Puzzle, Syntax
 
 from .Constants import ALEPH_NOUGHT
 
@@ -18,14 +18,15 @@ class SudokuSolver:
     """
     def __init__(self, game):
         self.game = game
+        self.syntax = Syntax()
         # the matrix of uninterpreted terms
-        self.variables = self.__create_variables()
+        self.variables = self.syntax.variables
         # the numerals as yices constants
-        self.numerals = self.__create_numerals()
+        self.numerals = self.syntax.constants
         # the context (a set/stack of yices assertions)
         self.context = Context()
-        # add the generic constraints (corresponding to the rules of the game)
-        self.__generate_constraints()
+        # add the rules of the game
+        self.assert_rules()
 
 
     def dispose(self):
@@ -38,60 +39,15 @@ class SudokuSolver:
         """var returns the variable at the specified cell."""
         return self.variables[i][j]
 
-    def __create_variables(self): # pylint: disable=R0201
-        """Creates the matrix of uninterpreted terms that represents the logical view of the board."""
-        int_t = Types.int_type()
-        variables = make_grid()
-        for i in range(9):
-            for j in range(9):
-                variables[i][j] = Terms.new_uninterpreted_term(int_t)
-        return variables
+    def assert_rules(self):
+        """assert_rules asserts the formulas the encode the Sudoku rules."""
+        self.context.assert_formulas(self.syntax.trivial_rules)
+        self.context.assert_formulas(self.syntax.duplicate_rules)
 
-    def __create_numerals(self): # pylint: disable=R0201
-        """Creates a mapping from digits to yices constants for those digits."""
-        numerals = {}
-        for i in range(1, 10):
-            numerals[i] = Terms.integer(i)
-        return numerals
-
-
-    def __generate_constraints(self): # pylint: disable=R0201
-        # each x is between 1 and 9
-        def between_1_and_9(x):
-            return Terms.yor([Terms.eq(x, self.numerals[i+1]) for i in range(9)])
-        for i in range(9):
-            for j in range(9):
-                self.context.assert_formula(between_1_and_9(self.variables[i][j]))
-
-        # All elements in a row must be distinct
-        for i in range(9):
-            self.context.assert_formula(Terms.distinct([self.variables[i][j] for j in range(9)]))
-
-
-        # All elements in a column must be distinct
-        for i in range(9):
-            self.context.assert_formula(Terms.distinct([self.variables[j][i] for j in range(9)]))
-
-        # All elements in each 3x3 square must be distinct
-        for row in range(3):
-            for column in range(3):
-                self.context.assert_formula(Terms.distinct([self.variables[i + 3 * row][j + 3 * column] for i in range(3) for j in range(3)]))
-
-
-    def __add_facts(self):
-        """Adds the facts gleaned from the current state of the puzzle."""
-        def set_value(row, column, value):
-            assert 0 <= row < 9
-            assert 0 <= column < 9
-            assert 1 <= value <= 9
-            self.context.assert_formula(Terms.arith_eq_atom(self.variables[row][column], self.numerals[value]))
-
-
-        for i in range(9):
-            for j in range(9):
-                value = self.game.puzzle.get_cell(i, j)
-                if value is not None:
-                    set_value(i, j, value)
+    def assert_diagram(self):
+        """Adds the diagram gleaned from the current state of the puzzle."""
+        diagram = self.syntax.diagram(self.game.puzzle)
+        self.context.assert_formulas(diagram)
 
     def solve(self):
 
@@ -101,7 +57,7 @@ class SudokuSolver:
         #we use push and pop so that we can solve (variants) repeatedly without having to start from scratch each time.
         self.context.push()
 
-        self.__add_facts()
+        self.assert_diagram()
 
         smt_stat = self.context.check_context(None)
 
@@ -149,7 +105,7 @@ class SudokuSolver:
             return Terms.yand(termlist)
         result = 0
         self.context.push()
-        self.__add_facts()
+        self.assert_diagram()
         while  self.context.check_context(None) == Status.SAT:
             model = Model.from_context(self.context, 1)
             diagram = model2term(model)
