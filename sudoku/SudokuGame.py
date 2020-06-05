@@ -11,7 +11,7 @@
 # All changes are recorded in the git commits.
 #
 
-from .SudokuBoard import SudokuBoard
+from .SudokuLib import Puzzle
 from .SudokuSolver import SudokuSolver
 
 
@@ -20,9 +20,9 @@ class SudokuGame:
     A Sudoku game, in charge of storing the state of the board and checking
     whether the puzzle is completed.
     """
-    def __init__(self, board_fp):
-        self.board_fp = board_fp
-        self.start_puzzle = SudokuBoard(board_fp).board
+    def __init__(self, board_file):
+        self.board_file = board_file
+        self.start_puzzle = Puzzle.path2puzzle(board_file)
         self.game_over = False
         # puzzle extends start_puzzle
         self.puzzle = None
@@ -33,11 +33,8 @@ class SudokuGame:
     def start(self):
         """start commences a new game."""
         self.game_over = False
-        self.puzzle = SudokuBoard.new_board()
+        self.puzzle = self.start_puzzle.clone()
         self.solution = None
-        for i in range(9):
-            for j in range(9):
-                self.puzzle[i][j] = self.start_puzzle[i][j]
 
     def solve(self):
         """solve uses the SMT solver to solve the current game."""
@@ -45,6 +42,7 @@ class SudokuGame:
         return self.solution is not None
 
     def dispose(self):
+        """dispose cleans up the resources in the Yices library."""
         print('Census:')
         self.solver.dispose()
 
@@ -76,17 +74,17 @@ class SudokuGame:
         return set(block) == set(range(1, 10))
 
     def __check_row(self, row):
-        return self.__check_block(self.puzzle[row])
+        return self.__check_block(self.puzzle.get_row(row))
 
     def __check_column(self, column):
         return self.__check_block(
-            [self.puzzle[row][column] for row in range(9)]
+            [self.puzzle.get_cell(row, column) for row in range(9)]
         )
 
     def __check_square(self, row, column):
         return self.__check_block(
             [
-                self.puzzle[r][c]
+                self.puzzle.get_cell(r, c)
                 for r in range(row * 3, (row + 1) * 3)
                 for c in range(column * 3, (column + 1) * 3)
             ]

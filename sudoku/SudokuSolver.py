@@ -2,7 +2,7 @@
 
 from yices import Context, Model, Terms, Types, Status, Yices
 
-from .SudokuBoard import SudokuBoard
+from .SudokuLib import Puzzle, make_grid
 
 from .Constants import ALEPH_NOUGHT
 
@@ -28,16 +28,20 @@ class SudokuSolver:
         self.__generate_constraints()
 
 
-    # how to hook this in somewhere?
     def dispose(self):
+        """dispose cleans up the solver's resources."""
         self.context.dispose()
         Yices.exit(True)
 
 
+    def var(self, i, j):
+        """var returns the variable at the specified cell."""
+        return self.variables[i][j]
+
     def __create_variables(self): # pylint: disable=R0201
         """Creates the matrix of uninterpreted terms that represents the logical view of the board."""
         int_t = Types.int_type()
-        variables = SudokuBoard.new_board()
+        variables = make_grid()
         for i in range(9):
             for j in range(9):
                 variables[i][j] = Terms.new_uninterpreted_term(int_t)
@@ -85,8 +89,8 @@ class SudokuSolver:
 
         for i in range(9):
             for j in range(9):
-                value = self.game.puzzle[i][j]
-                if value != 0:
+                value = self.game.puzzle.get_cell(i, j)
+                if value is not None:
                     set_value(i, j, value)
 
     def solve(self):
@@ -106,20 +110,28 @@ class SudokuSolver:
         else:
             #get the model
             model = Model.from_context(self.context, 1)
-
             #return the model as a board with ONLY the newly found values inserted.
-            solution = SudokuBoard.new_board()
-
-            for i in range(9):
-                for j in range(9):
-                    if self.game.puzzle[i][j] == 0:
-                        solution[i][j] = model.get_value(self.variables[i][j])
-
+            solution = self.puzzle_from_model(model, True)
             model.dispose()
 
         self.context.pop()
-
         return solution
+
+    def puzzle_from_model(self, model, only_new=False):
+        """puzzle_from_model builds a puzzle from the given model.
+
+        If the only_new argument is True, then only newly solved cells are included in returned the puzzle."""
+        if model is None:
+            return None
+        puzzle = Puzzle()
+        for i in range(9):
+            for j in range(9):
+                if only_new:
+                    if self.game.puzzle.get_cell(i, j) is None:
+                        puzzle.set_cell(i, j, model.get_value(self.var(i, j)))
+                else:
+                    puzzle.set_cell(i, j, model.get_value(self.var(i, j)))
+        return puzzle
 
     #we could contrast the following with the  yices_assert_blocking_clause
 
@@ -129,7 +141,7 @@ class SudokuSolver:
             termlist = []
             for i in range(9):
                 for j in range(9):
-                    if self.game.puzzle[i][j] == 0:
+                    if self.game.puzzle.get_cell(i, j) is None:
                         val = model.get_value(self.variables[i][j])
                         var = self.variables[i][j]
                         value = self.numerals[val]

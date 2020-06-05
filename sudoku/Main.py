@@ -50,15 +50,7 @@ def main():
 
         board_file = pkg.resource_filename('sudoku', f'data/{board_name}.sudoku')
 
-        if board_name is not None:
-            board_fp = open(board_file, 'r')
-        else:
-            board_fp = None
-
-        game = SudokuGame(board_fp)
-
-        if board_fp is not None:
-            board_fp.close()
+        game = SudokuGame(board_file)
 
         game.start()
 

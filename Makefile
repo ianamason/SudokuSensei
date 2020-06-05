@@ -62,7 +62,7 @@ rstify: check_md2rst
 
 
 clean:
-	rm -rf  *.pyc *~ */*~ __pycache__
+	rm -rf  *~ */*~ */*/*~ */__pycache__
 
 PYLINT = $(shell which pylint)
 

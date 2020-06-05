@@ -31,9 +31,7 @@ class SudokuUI(Frame): # pylint: disable=R0901
     def __init_ui(self):
         self.parent.title('Sudoku Sensei')
         self.pack(fill=BOTH)
-        self.canvas = Canvas(self,
-                             width=WIDTH,
-                             height=HEIGHT)
+        self.canvas = Canvas(self, width=WIDTH, height=HEIGHT)
         self.canvas.pack(fill=BOTH, side=TOP)
 
         clear_puzzle_button = Button(self,
@@ -90,18 +88,18 @@ class SudokuUI(Frame): # pylint: disable=R0901
         self.canvas.delete("numbers")
         for i in range(9):
             for j in range(9):
-                answer = self.game.puzzle[i][j]
-                if answer != 0:
+                answer = self.game.puzzle.get_cell(i, j)
+                if answer is not None:
                     x = MARGIN + j * SIDE + SIDE / 2
                     y = MARGIN + i * SIDE + SIDE / 2
-                    original = self.game.start_puzzle[i][j]
+                    original = self.game.start_puzzle.get_cell(i, j)
                     color = "black" if answer == original else "sea green"
                     self.canvas.create_text(
                         x, y, text=answer, tags="numbers", fill=color
                     )
                 elif self.game.solution is not None:
-                    solution = self.game.solution[i][j]
-                    if solution != 0:
+                    solution = self.game.solution.get_cell(i, j)
+                    if solution is not None:
                         x = MARGIN + j * SIDE + SIDE / 2
                         y = MARGIN + i * SIDE + SIDE / 2
                         self.canvas.create_text(
@@ -186,7 +184,11 @@ class SudokuUI(Frame): # pylint: disable=R0901
         if self.game.game_over:
             return
         if self.row >= 0 and self.col >= 0 and event.char in "1234567890":
-            self.game.puzzle[self.row][self.col] = int(event.char)
+            val = int(event.char)
+            if val == 0:
+                self.game.puzzle.erase_cell(self.row, self.col)
+            else:
+                self.game.puzzle.set_cell(self.row, self.col, val)
             self.col, self.row = -1, -1
             self.__draw_puzzle()
             self.__draw_cursor()
@@ -217,7 +219,7 @@ class SudokuUI(Frame): # pylint: disable=R0901
         self.__draw_puzzle()
 
     def __display_hint(self):
-        self.row=8
-        self.col=0
+        self.row = 8
+        self.col = 0
         self.__draw_cursor()
         messagebox.showinfo("A Hint", "Coming soon")
