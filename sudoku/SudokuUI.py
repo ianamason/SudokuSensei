@@ -204,10 +204,16 @@ class SudokuUI(Frame): # pylint: disable=R0901
         self.__draw_puzzle()
 
     def __display_hint(self):
-        self.row = 8
-        self.col = 0
+        success, hint = self.game.get_hint()
+        if success is None:
+            messagebox.showinfo('Sorry', hint)
+            return
+        (i, j, val, count) = success
+        self.row = i
+        self.col = j
         self.__draw_cursor()
-        messagebox.showinfo('A Hint', 'Coming soon')
+        print(f'The cell [{i}, {j}] should contain {val}')
+        messagebox.showinfo(f'A Hint: {count} rules are needed', hint)
 
     def __draw_solution_count(self):
         count = self.game.count_solutions()

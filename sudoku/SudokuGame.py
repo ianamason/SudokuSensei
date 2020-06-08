@@ -49,6 +49,10 @@ class SudokuGame:
         """count_solutions returns the number of distinct solutions to the current board."""
         return self.solver.count_models()
 
+    def get_hint(self):
+        """returns the easiest hint."""
+        return self.solver.get_hint()
+
     def clear_solution(self):
         """clear_solution resets the solution."""
         self.solution = None

@@ -3,6 +3,7 @@
 from yices.Types import Types
 from yices.Terms import Terms
 
+from .StringBuilder import StringBuilder
 
 int_t = Types.int_type()
 
@@ -202,6 +203,15 @@ class Syntax:
                     terms.append(self.cell_equality(i, j, val))
         return terms
 
+    def explain(self, terms):
+        """explain returns a multiline string explaining the given terms (which should be elements of duplicate_rules."""
+        sb = StringBuilder()
+        count = 1
+        for term in terms:
+            sb.append(f'Rule {count}: ').append(self.explanation.get(term)).append('\n')
+            count += 1
+        return str(sb)
+
 
 
 class Cores:
@@ -229,7 +239,7 @@ class Cores:
                 vec = self.core_map[i]
                 for v in vec: # pylint: disable=C0103
                     retval.append(v)
-                    print(f'OK: {v[0]} {v[1]} {v[2]}   {len(v[3])} / {self.maximum}')
+                    #print(f'OK: {v[0]} {v[1]} {v[2]}   {len(v[3])} / {self.maximum}')
                     counter += 1
                     if counter >= count:
                         return retval

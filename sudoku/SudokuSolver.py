@@ -2,7 +2,7 @@
 
 from yices import Census, Context, Model, Terms, Status, Yices
 
-from .SudokuLib import Puzzle, Syntax
+from .SudokuLib import Puzzle, Syntax, Cores
 
 from .Constants import ALEPH_NOUGHT
 
@@ -76,6 +76,17 @@ class SudokuSolver:
         diagram = self.syntax.diagram(self.game.puzzle)
         ctx.assert_formulas(diagram)
 
+    def assert_puzzle_except(self, ctx, row, col, ans):
+        assert ans == self.game.puzzle.get_cell(row, col)
+        terms = []
+        for i in range(9):
+            for j in range(9):
+                if i != row and j != col:
+                    val = self.game.puzzle.get_cell(i, j)
+                    if val is not None:
+                        terms.append(self._equality(i, j, val))
+        ctx.assert_formulas(terms)
+
     def solve(self):
         """Attempts to solve the puzzle, returning either None if there is no solution, or a board with the correct MISSING entries."""
         solution = None
@@ -138,3 +149,100 @@ class SudokuSolver:
                 break
         context.dispose()
         return result
+
+    def filter_cores(self, solution, cutoff=5):
+        cores = self.compute_cores(solution)
+        if cores is None:
+            return None
+        #print('\nCores:\n')
+        smallest = cores.least(cutoff)
+        filtered = Cores(len(self.duplicate_rules))
+        for core in smallest:
+            ncore = self.filter_core(core)
+            filtered.add(*ncore)
+        #print('\nFiltered Cores:\n')
+        smallest = filtered.least(5)
+        return smallest
+
+    def compute_cores(self, solution):
+        cores = Cores(len(self.duplicate_rules))
+        if solution is not None:
+            for i in range(9):
+                for j in range(9):
+                    slot = self.game.puzzle.get_cell(i, j)
+                    if slot is None:
+                        ans = solution.get_cell(i, j)
+                        core = self.compute_core(i, j, ans)
+                        if core is None:
+                            return None
+                        cores.add(*core)
+        return cores
+
+    def compute_core(self, i, j, val):
+        """We compute the unsat core of the duplicate_rules when asserting self.var(i, j) != val w.r.t the puzzle (val is assumed to be the unique solution)."""
+        if not (0 <= i <= 8 and 0 <= j <= 8 and 1 <= val <= 9):
+            raise Exception(f'Index error: {i} {j} {val}')
+        context = Context()
+        self.assert_puzzle(context)
+        self.assert_not_value(context, i, j, val)
+        self.assert_trivial_rules(context)
+        smt_stat = context.check_context_with_assumptions(None, self.duplicate_rules)
+        # a valid puzzle should have a unique solution, so this should not happen, if it does we bail
+        if smt_stat != Status.UNSAT:
+            #print(f'Error: {i} {j} {val} - not UNSAT: {Status.name(smt_stat)}')
+            model = Model.from_context(context, 1)
+            answer = self.puzzle_from_model(model)
+            #print('Counter example (i.e. origonal puzzle does not have a unique solution):')
+            answer.pprint()
+            model.dispose()
+            context.dispose()
+            return None
+        core = context.get_unsat_core()
+        context.dispose()
+        #print(f'Core: {i} {j} {val}   {len(core)} / {len(self.duplicate_rules)}')
+        return (i, j, val, core)
+
+    def filter_core(self, core):
+        i, j, val, terms = core
+        context = Context()
+        self.assert_puzzle(context)
+        self.assert_not_value(context, i, j, val)
+        self.assert_trivial_rules(context)
+        filtered = terms.copy()
+        for term in terms:
+            filtered.remove(term)
+            smt_stat = context.check_context_with_assumptions(None, filtered)
+            if smt_stat != Status.UNSAT:
+                filtered.append(term)
+        context.dispose()
+        return (i, j, val, filtered)
+
+    def erasable(self, ctx, i, j, val):
+        """erasable returns True if puzzle (with [row, col] = val omitted) implies that [row, col] = val, it returns False otherwise.
+
+        It is assumed that puzzle.get_cell(i,j) == val
+        The context has already been informed of the rules.
+        """
+        ctx.push()
+        self.assert_puzzle_except(ctx, i, j, val)
+        self.assert_not_value(ctx, i, j, val)
+        smt_stat = ctx.check_context(None)
+        ctx.pop()
+        return smt_stat == Status.UNSAT
+
+    def get_hint(self):
+        solution = self.solve()
+        if solution is None:
+            return (None, "There is no solution")
+        cores = self.filter_cores(solution)
+        if cores is None:
+            return (None, "There must be a unique solution for a hint")
+        i, j, val, terms = cores[0]
+        return ((i, j, val, len(terms)), self.syntax.explain(terms))
+
+    def show_hints(self, cores):
+        for core in cores:
+            i, j, val, terms = core
+            print(f'[{i}, {j}] = {val} is forced by the following rules:')
+            for term in terms:
+                print(f'\t{self.syntax.explanation[term]}')
