@@ -35,42 +35,42 @@ class SudokuUI(Frame): # pylint: disable=R0901
         self.canvas.pack(fill=BOTH, side=TOP)
 
         clear_puzzle_button = Button(self,
-                                     text="Clear Puzzle",
+                                     text='Clear Puzzle',
                                      command=self.__clear_puzzle)
         clear_puzzle_button.pack(side=LEFT, padx=PAD)
 
         clear_solution_button = Button(self,
-                                       text="Clear Solution",
+                                       text='Clear Solution',
                                        command=self.__clear_solution)
         clear_solution_button.pack(side=LEFT, padx=PAD)
 
         solve_button = Button(self,
-                              text="Solve",
+                              text='Solve',
                               command=self.__solve_puzzle)
         solve_button.pack(side=LEFT, padx=PAD)
 
         count_button = Button(self,
-                              text="#Solutions",
+                              text='#Solutions',
                               command=self.__count_solutions)
         count_button.pack(side=LEFT, padx=PAD)
 
         hint_button = Button(self,
-                             text="Hint",
+                             text='Hint',
                              command=self.__display_hint)
         hint_button.pack(side=LEFT, padx=PAD)
 
         self.__draw_grid()
         self.__draw_puzzle()
 
-        self.canvas.bind("<Button-1>", self.__cell_clicked)
-        self.canvas.bind("<Key>", self.__key_pressed)
+        self.canvas.bind('<Button-1>', self.__cell_clicked)
+        self.canvas.bind('<Key>', self.__key_pressed)
 
     def __draw_grid(self):
         """
         Draws grid divided with blue lines into 3x3 squares
         """
         for i in range(10):
-            color = "blue" if i % 3 == 0 else "gray"
+            color = 'blue' if i % 3 == 0 else 'gray'
 
             x0 = MARGIN + i * SIDE
             y0 = MARGIN
@@ -85,7 +85,7 @@ class SudokuUI(Frame): # pylint: disable=R0901
             self.canvas.create_line(x0, y0, x1, y1, fill=color)
 
     def __draw_puzzle(self):
-        self.canvas.delete("numbers")
+        self.canvas.delete('numbers')
         for i in range(9):
             for j in range(9):
                 answer = self.game.puzzle.get_cell(i, j)
@@ -93,9 +93,9 @@ class SudokuUI(Frame): # pylint: disable=R0901
                     x = MARGIN + j * SIDE + SIDE / 2
                     y = MARGIN + i * SIDE + SIDE / 2
                     original = self.game.start_puzzle.get_cell(i, j)
-                    color = "black" if answer == original else "sea green"
+                    color = 'black' if answer == original else 'sea green'
                     self.canvas.create_text(
-                        x, y, text=answer, tags="numbers", fill=color
+                        x, y, text=answer, tags='numbers', fill=color
                     )
                 elif self.game.solution is not None:
                     solution = self.game.solution.get_cell(i, j)
@@ -103,13 +103,13 @@ class SudokuUI(Frame): # pylint: disable=R0901
                         x = MARGIN + j * SIDE + SIDE / 2
                         y = MARGIN + i * SIDE + SIDE / 2
                         self.canvas.create_text(
-                            x, y, text=solution, tags="numbers", fill="purple"
+                            x, y, text=solution, tags='numbers', fill='purple'
                         )
 
 
     def __draw_cursor(self):
         #print(f'[{self.row}, {self.col}]')
-        self.canvas.delete("cursor")
+        self.canvas.delete('cursor')
         if self.row >= 0 and self.col >= 0:
             x0 = MARGIN + self.col * SIDE + 1
             y0 = MARGIN + self.row * SIDE + 1
@@ -117,7 +117,7 @@ class SudokuUI(Frame): # pylint: disable=R0901
             y1 = MARGIN + (self.row + 1) * SIDE - 1
             self.canvas.create_rectangle(
                 x0, y0, x1, y1,
-                outline="red", tags="cursor"
+                outline='red', tags='cursor'
             )
 
     def __draw_message(self, tag, textstr, fillc, outlinec):
@@ -133,30 +133,15 @@ class SudokuUI(Frame): # pylint: disable=R0901
         self.canvas.create_text(
             x, y,
             text=textstr, tags=tag,
-            fill="white", font=("Arial", 32)
+            fill='white', font=('Arial', 32)
         )
 
 
     def __draw_victory(self):
-        self.__draw_message("victory", "You win!", "dark orange", "orange")
-
+        self.__draw_message('victory', 'You win!', 'dark orange', 'orange')
 
     def __draw_no_solution(self):
-        self.__draw_message("failure", "No Solution!", "dark red", "red")
-
-    def __draw_solution_count(self):
-        count = self.game.count_solutions()
-        if count == 0:
-            text = "No solutions."
-        elif count == 1:
-            text = "Unique solution."
-        elif count < ALEPH_NOUGHT:
-            text = "{0} solutions".format(count)
-        else:
-            text = ">= {0} solutions".format(count)
-
-        self.__draw_message("count", text, "dark green", "green")
-
+        self.__draw_message('failure', 'No Solution!', 'dark red', 'red')
 
     def __cell_clicked(self, event):
         if self.game.game_over:
@@ -183,7 +168,7 @@ class SudokuUI(Frame): # pylint: disable=R0901
     def __key_pressed(self, event):
         if self.game.game_over:
             return
-        if self.row >= 0 and self.col >= 0 and event.char in "1234567890":
+        if self.row >= 0 and self.col >= 0 and event.char in '1234567890':
             val = int(event.char)
             if val == 0:
                 self.game.puzzle.erase_cell(self.row, self.col)
@@ -196,7 +181,7 @@ class SudokuUI(Frame): # pylint: disable=R0901
                 self.__draw_victory()
 
     def __clear_messages(self):
-        for tag in ["victory", "failure", "count"]:
+        for tag in ['victory', 'failure', 'count']:
             self.canvas.delete(tag)
 
     def __clear_puzzle(self):
@@ -222,4 +207,16 @@ class SudokuUI(Frame): # pylint: disable=R0901
         self.row = 8
         self.col = 0
         self.__draw_cursor()
-        messagebox.showinfo("A Hint", "Coming soon")
+        messagebox.showinfo('A Hint', 'Coming soon')
+
+    def __draw_solution_count(self):
+        count = self.game.count_solutions()
+        if count == 0:
+            text = 'There are no solutions.'
+        elif count == 1:
+            text = 'There is a unique solution.'
+        elif count < ALEPH_NOUGHT:
+            text = f'There are {count} solutions'
+        else:
+            text = f'There are >= {ALEPH_NOUGHT} solutions'
+        messagebox.showinfo(f'|Solutions| = {count}', text)

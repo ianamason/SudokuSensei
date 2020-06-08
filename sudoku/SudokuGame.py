@@ -43,7 +43,6 @@ class SudokuGame:
 
     def dispose(self):
         """dispose cleans up the resources in the Yices library."""
-        print('Census:')
         self.solver.dispose()
 
     def count_solutions(self):

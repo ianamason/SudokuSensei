@@ -201,3 +201,36 @@ class Syntax:
                 if val is not None:
                     terms.append(self.cell_equality(i, j, val))
         return terms
+
+
+
+class Cores:
+    """Cores area data structure for maintaining, filtering, and ranking unsat cores."""
+    def __init__(self, card):
+        self.core_map = {}
+        self.maximum = card
+
+    def add(self, i, j, val, core):
+        """adds the fact that the unsat_core of [i,j] != val is core."""
+        key = len(core)
+        entry = []
+        if key not in self.core_map:
+            self.core_map[key] = entry
+        else:
+            entry = self.core_map[key]
+        entry.append(tuple([i, j, val, core]))
+
+    def least(self, count):
+        """returns a list of the count smallest cores."""
+        retval = []
+        counter = 0
+        for i in range(self.maximum + 1):
+            if i in self.core_map:
+                vec = self.core_map[i]
+                for v in vec: # pylint: disable=C0103
+                    retval.append(v)
+                    print(f'OK: {v[0]} {v[1]} {v[2]}   {len(v[3])} / {self.maximum}')
+                    counter += 1
+                    if counter >= count:
+                        return retval
+        return retval
