@@ -108,7 +108,6 @@ class SudokuUI(Frame): # pylint: disable=R0901
 
 
     def __draw_cursor(self):
-        print(f'[{self.row}, {self.col}]')
         self.canvas.delete('cursor')
         if self.row >= 0 and self.col >= 0:
             x0 = MARGIN + self.col * SIDE + 1
@@ -141,8 +140,8 @@ class SudokuUI(Frame): # pylint: disable=R0901
     def __draw_victory(self):
         self.__draw_message('victory', 'You win!', 'dark orange', 'orange')
 
-    def __draw_no_solution(self):
-        self.__draw_message('failure', 'No Solution!', 'dark red', 'red')
+    def __draw_no_solution(self): # pylint: disable=R0201
+        messagebox.showinfo('Bummer', 'No Solution!')
 
     def __cell_clicked(self, event):
         if self.game.game_over:

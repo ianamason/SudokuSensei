@@ -61,7 +61,8 @@ class SudokuGame:
         """the user has selected the cell, so we can print debugging information."""
         freedom = self.puzzle.freedom_set(row, col)
         if freedom is not None:
-            print(freedom)
+            vals = ' '.join([str(x) for x in range(1, 10) if x in freedom])
+            print(f'[{row}, {col}]: {vals}')
 
     def check_win(self):
         """check_win determines if the current game has been solved."""

@@ -53,6 +53,13 @@ class Freedom:
                     freedom[(row, col)] = None
         return freedom
 
+    def _clear_map(self):
+        """resets the map"""
+        for row in range(9):
+            for col in range(9):
+                sx = self.freedom[(row, col)]
+                if sx is not None:
+                    sx.clear()
 
     def _constrain_row(self, row, col, val):
         for cx in range(9):
@@ -89,8 +96,12 @@ class Freedom:
                     # val cannot be in any the cell in this subsquare
                     self._constrain_subsquare(row, col, val)
 
+
     def freedom_set(self, row, col):
-        """returns the set of possible (immediate) choices for the given cell."""
+        """returns the set of possible (immediate) choices for the given cell.
+
+        I.e. the complement of the set we store in the map for rthe given cell.
+        """
         sx = self.freedom[(row, col)]
         if sx is None:
             return None
@@ -166,18 +177,23 @@ class Puzzle:
     def erase_cell(self, i, j):
         """erase_cell erases the contents of the cell in the puzzle."""
         if 0 <= i <= 8 and 0 <= j <= 8:
-            self.grid[i][j] = None
-            if self.freedom is not None:
-                self.freedom.constrain()
+            val = self.grid[i][j]
+            if val is not None:
+                self.grid[i][j] = None
+                if self.freedom is not None:
+                    self.freedom.constrain()
             return None
         raise SudokuError(f'erase_cell error: {i} {j}')
 
     def set_cell(self, i, j, val):
         """set_cell set the value of the given cell to the provided value."""
         if 0 <= i <= 8 and 0 <= j <= 8 and 1 <= val <= 9:
-            self.grid[i][j] = val
-            if self.freedom is not None:
-                self.freedom.constrain()
+            oval = self.grid[i][j]
+            if oval != val:
+                self.grid[i][j] = val
+                # when we are first creating the puzzle the map is None
+                if self.freedom is not None:
+                    self.freedom.constrain()
             return None
         raise SudokuError(f'set_cell error: {i} {j} {val}')
 
