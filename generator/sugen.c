@@ -196,9 +196,9 @@ static void print_grid_pretty(const struct gridline_def *def,
 			int v = grid[y * DIM + x];
 
 			if (x % ORDER)
-				printf(def->vl_minor);
+				printf("%s", def->vl_minor);
 			else
-				printf(def->vl_major);
+				printf("%s", def->vl_major);
 
 			if (v)
 				printf(" %c ", alphabet[v]);
