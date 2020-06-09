@@ -107,6 +107,21 @@ class Freedom:
             return None
         return set(range(1, 10)).difference(sx)
 
+    def least_free(self):
+        """least_free returns the empty cell with the least freedom."""
+        least = None
+        least_size = 0
+        for row in range(9):
+            for col in range(9):
+                sx = self.freedom[(row, col)]
+                if sx is not None:
+                    sxz = len(sx)
+                    if  sxz > least_size:
+                        least = (row, col)
+                        least_size = sxz
+        return least
+
+
 
 class Puzzle:
     """Puzzle is a 9x9 grid of digits between 1 and 9 inclusive, or None."""
