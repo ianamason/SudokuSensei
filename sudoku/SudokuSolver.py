@@ -77,6 +77,7 @@ class SudokuSolver:
         ctx.assert_formulas(diagram)
 
     def assert_puzzle_except(self, ctx, row, col, ans):
+        """Adds the diagram, with the single given exception, of the current state of the puzzle."""
         assert ans == self.game.puzzle.get_cell(row, col)
         terms = []
         for i in range(9):
@@ -151,6 +152,7 @@ class SudokuSolver:
         return result
 
     def filter_cores(self, solution, cutoff=5):
+        """computes the unsat cores, and then filters the 'cutoff' smallest ones."""
         cores = self.compute_cores(solution)
         if cores is None:
             return None
@@ -165,6 +167,7 @@ class SudokuSolver:
         return smallest
 
     def compute_cores(self, solution):
+        """computes the unsat cores of all the unfilled cells in the puzzle."""
         cores = Cores(len(self.duplicate_rules))
         if solution is not None:
             for i in range(9):
@@ -203,6 +206,7 @@ class SudokuSolver:
         return (i, j, val, core)
 
     def filter_core(self, core):
+        """given a core, removes every unnecessary member until it has a minimal core."""
         i, j, val, terms = core
         context = Context()
         self.assert_puzzle(context)
@@ -231,6 +235,7 @@ class SudokuSolver:
         return smt_stat == Status.UNSAT
 
     def get_hint(self):
+        """get_hint returns the easiest cell to solve, using unsat_cores."""
         solution = self.solve()
         if solution is None:
             return (None, "There is no solution")
@@ -241,6 +246,7 @@ class SudokuSolver:
         return ((i, j, val, len(terms)), self.syntax.explain(terms))
 
     def show_hints(self, cores):
+        """show_hint prints out the explanation of the given cores."""
         for core in cores:
             i, j, val, terms = core
             print(f'[{i}, {j}] = {val} is forced by the following rules:')

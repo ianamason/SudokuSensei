@@ -57,6 +57,11 @@ class SudokuGame:
         """clear_solution resets the solution."""
         self.solution = None
 
+    def cell_selected(self, row, col):
+        """the user has selected the cell, so we can print debugging information."""
+        freedom = self.puzzle.freedom_set(row, col)
+        if freedom is not None:
+            print(freedom)
 
     def check_win(self):
         """check_win determines if the current game has been solved."""

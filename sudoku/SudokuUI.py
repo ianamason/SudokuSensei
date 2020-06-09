@@ -108,7 +108,7 @@ class SudokuUI(Frame): # pylint: disable=R0901
 
 
     def __draw_cursor(self):
-        #print(f'[{self.row}, {self.col}]')
+        print(f'[{self.row}, {self.col}]')
         self.canvas.delete('cursor')
         if self.row >= 0 and self.col >= 0:
             x0 = MARGIN + self.col * SIDE + 1
@@ -119,6 +119,7 @@ class SudokuUI(Frame): # pylint: disable=R0901
                 x0, y0, x1, y1,
                 outline='red', tags='cursor'
             )
+            self.game.cell_selected(self.row, self.col)
 
     def __draw_message(self, tag, textstr, fillc, outlinec):
         # create a oval (which will be a circle)

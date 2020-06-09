@@ -34,6 +34,69 @@ class SudokuError(Exception):
     """An application specific error."""
 
 
+class Freedom:
+    """Represents the set oriented freedom analysis of a puzzle."""
+
+    def __init__(self, grid):
+        self.matrix = grid
+        self.freedom = None
+        self.constrain()
+
+    def _make_map(self):
+        freedom = {}
+        for row in range(9):
+            for col in range(9):
+                # the set represents the values an empty cell CANNOT take
+                if self.matrix[row][col] is None:
+                    freedom[(row, col)] = set()
+                else:
+                    freedom[(row, col)] = None
+        return freedom
+
+
+    def _constrain_row(self, row, col, val):
+        for cx in range(9):
+            if cx != col:
+                sx = self.freedom[(row, cx)]
+                if sx is not None:
+                    sx.add(val)
+
+    def _constrain_col(self, row, col, val):
+        for rx in range(9):
+            if rx != row:
+                sx = self.freedom[(rx, col)]
+                if sx is not None:
+                    sx.add(val)
+
+    def _constrain_subsquare(self, row, col, val):
+        for rs, cs in Puzzle.subsquare(row, col):
+            if (rs, cs) != (row, col):
+                sx = self.freedom[(rs, cs)]
+                if sx is not None:
+                    sx.add(val)
+
+    def constrain(self):
+        """computes the set oriented freedom analysis."""
+        self.freedom = self._make_map() #for the time being we just redo when things change
+        for row in range(9):
+            for col in range(9):
+                val = self.matrix[row][col]
+                if val is not None:
+                    # val cannot be in any the cell in this row
+                    self._constrain_row(row, col, val)
+                    # val cannot be in any the cell in this column
+                    self._constrain_col(row, col, val)
+                    # val cannot be in any the cell in this subsquare
+                    self._constrain_subsquare(row, col, val)
+
+    def freedom_set(self, row, col):
+        """returns the set of possible (immediate) choices for the given cell."""
+        sx = self.freedom[(row, col)]
+        if sx is None:
+            return None
+        return set(range(1, 10)).difference(sx)
+
+
 class Puzzle:
     """Puzzle is a 9x9 grid of digits between 1 and 9 inclusive, or None."""
 
@@ -66,15 +129,27 @@ class Puzzle:
                     break
             return Puzzle(matrix)
 
+    @staticmethod
+    def subsquare(orow, ocol):
+        """returns a list of cells that make up the subsquare the cell belongs to."""
+        if 0 <= orow <= 8 and 0 <= ocol <= 8:
+            row = 3 * (orow // 3)
+            col = 3 * (ocol // 3)
+
+            return [(r, c) for r in range(row, row + 3) for c in range(col, col + 3)]
+        raise SudokuError(f'subsquare error: {orow} {ocol}')
+
 
     def __init__(self, matrix=None):
         self.grid = make_grid()
+        self.freedom = None
         if matrix is not None:
             for i in range(9):
                 for j in range(9):
                     val = matrix[i][j]
                     if val is not None:
                         self.set_cell(i, j, val)
+        self.freedom = Freedom(self.grid)
 
     def get_row(self, row):
         """get_row returns a copy of the given row."""
@@ -92,6 +167,8 @@ class Puzzle:
         """erase_cell erases the contents of the cell in the puzzle."""
         if 0 <= i <= 8 and 0 <= j <= 8:
             self.grid[i][j] = None
+            if self.freedom is not None:
+                self.freedom.constrain()
             return None
         raise SudokuError(f'erase_cell error: {i} {j}')
 
@@ -99,6 +176,8 @@ class Puzzle:
         """set_cell set the value of the given cell to the provided value."""
         if 0 <= i <= 8 and 0 <= j <= 8 and 1 <= val <= 9:
             self.grid[i][j] = val
+            if self.freedom is not None:
+                self.freedom.constrain()
             return None
         raise SudokuError(f'set_cell error: {i} {j} {val}')
 
@@ -124,6 +203,9 @@ class Puzzle:
         """pprint pretty prints the puzzle to stdout."""
         print(self.to_string(pad, blank, newline))
 
+    def freedom_set(self, row, col):
+        """return the freedom set of the given cell."""
+        return self.freedom.freedom_set(row, col)
 
 
 class Syntax:
