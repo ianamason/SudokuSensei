@@ -144,6 +144,22 @@ static int read_grid(uint8_t *grid)
 
 static const char alphabet[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+static void grid2fp(FILE* fp, const uint8_t *grid)
+{
+	int y;
+	for (y = 0; y < DIM; y++) {
+      int x;
+      for (x = 0; x < DIM; x++) {
+        int v = grid[y * DIM + x];
+        if (v)
+          fprintf(fp, "%c", alphabet[v]);
+        else
+          fprintf(fp, "0");
+      }
+      fprintf(fp, "\n");
+	}
+}
+
 static void print_grid(const uint8_t *grid)
 {
 	int y;
@@ -850,11 +866,12 @@ static int harden_puzzle(const uint8_t *solution, uint8_t *puzzle,
  */
 
 struct options {
-	int				max_iter;
-	int				target_diff;
-	int				max_diff;
-	const struct gridline_def	*gl_def;
-	const char			*action;
+  int               dump;
+  int				max_iter;
+  int				target_diff;
+  int				max_diff;
+  const struct gridline_def	*gl_def;
+  const char			*action;
 };
 
 static void usage(const char *progname)
@@ -866,6 +883,7 @@ static void usage(const char *progname)
 "    -t <score>         Target difficulty for puzzle generation.\n"
 "    -u                 Use UTF-8 line-drawing characters.\n"
 "    -a                 Use ASCII line-drawing characters.\n"
+"    -d                 Dump generated puzzle to a file.\n"
 "\n"
 "Action should be one of:\n"
 "    solve              Read a grid from stdin and solve it.\n"
@@ -912,11 +930,16 @@ static int parse_options(int argc, char **argv, struct options *o)
 #endif
 	o->target_diff = -1;
 	o->max_diff = -1;
+    o->dump = 0;
 
-	while ((i = getopt_long(argc, argv, "i:t:m:ua", longopts, NULL)) >= 0)
+	while ((i = getopt_long(argc, argv, "i:t:m:uad", longopts, NULL)) >= 0)
 		switch (i) {
 		case 'i':
 			o->max_iter = atoi(optarg);
+			break;
+
+		case 'd':
+			o->dump = 1;
 			break;
 
 		case 't':
@@ -964,6 +987,7 @@ static int parse_options(int argc, char **argv, struct options *o)
 	o->action = argv[0];
 	return 0;
 }
+
 
 static void print_grid_opt(const struct options *o, const uint8_t *grid)
 {
@@ -1057,6 +1081,41 @@ static int action_harden(const struct options *o)
 	return 0;
 }
 
+/*
+ * dumps the puzzle out to a file called "puzzle_diff_datestring.puzzle"
+ * in the SudokuSensei minimalistic format.
+ */
+static void dump_puzzle(const uint8_t *puzzle, int diff)
+{
+  char pathbuffer[256] = {0};
+  char timebuffer[256] = {0};
+  time_t rawtime;
+  struct tm *ptm;
+  FILE* fp;
+
+  rawtime = time(NULL);
+  if (rawtime == -1) { return; }
+
+  ptm = localtime(&rawtime);
+
+  if (ptm == NULL) { return; }
+
+  strftime(timebuffer, 256, "%Y_%m_%d", ptm);
+
+  snprintf(pathbuffer, 256, "%d_%s.sudoku", diff, timebuffer);
+
+  fp = fopen(pathbuffer, "w");
+
+  if (fp == NULL){ return; }
+
+  grid2fp(fp, puzzle);
+
+  fclose(fp);
+
+  printf("\nSaved: %s\n", pathbuffer);
+
+}
+
 static int action_generate(const struct options *o)
 {
 	uint8_t puzzle[ELEMENTS];
@@ -1070,6 +1129,11 @@ static int action_generate(const struct options *o)
 			     o->max_diff, o->target_diff);
 	print_grid_opt(o, puzzle);
 	printf("\nDifficulty: %d\n", diff);
+
+    if (o->dump) {
+      dump_puzzle(puzzle, diff);
+    }
+
 	return 0;
 }
 

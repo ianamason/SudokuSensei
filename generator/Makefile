@@ -20,7 +20,7 @@ help:
 	@echo ''
 
 sugen: sugen.c
-	${CC} -O3 -Wall sugen.c -o sugen
+	${CC} -O3 -Wall -DNO_SOFA sugen.c -o sugen
 
 #these numbers are total guesses, but at least force the generator to try ...
 easy: sugen

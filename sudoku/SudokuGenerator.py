@@ -25,7 +25,7 @@ def solve(problem, solution, diff):
             for col in range(9):
                 if problem.get_cell(row, col) is None:
                     empty += 1
-        diff[0] = (ctx.branch_score * 10) + empty
+        diff[0] = (ctx.branch_score * 100) + empty
 
 
     return ctx.count - 1
@@ -46,7 +46,7 @@ def solve_recurse(ctx, freedom, diff):
     row, col = least_free_cell
 
     free = freedom.freedom_set(row, col)
-    bf = len(free)
+    bf = len(free) - 1
     diff += bf * bf
 
     for val in free:
