@@ -29,62 +29,84 @@ def make_variables():
             variables[i][j] = Terms.new_uninterpreted_term(int_t)
     return variables
 
+def make_freedom_map():
+    """constructs an initially empty freedom map."""
+    freedom = {}
+    for row in range(9):
+        for col in range(9):
+            # the set represents the values a cell CANNOT take
+            freedom[(row, col)] = set()
+    return freedom
 
 class SudokuError(Exception):
     """An application specific error."""
 
 
 class Freedom:
-    """Represents the set oriented freedom analysis of a puzzle."""
+    """Represents simple freedom analysis of a puzzle.
+
+    Each cell is assigned the set of values that it can legally take (irregardless of
+    whether they contain a value already). The map is updated as the puzzle is mutated.
+    """
 
     def __init__(self, grid):
         self.matrix = grid
-        self.freedom = None
+        self.freedom = make_freedom_map()
         self.constrain()
 
-    def _make_map(self):
-        freedom = {}
-        for row in range(9):
-            for col in range(9):
-                # the set represents the values an empty cell CANNOT take
-                if self.matrix[row][col] is None:
-                    freedom[(row, col)] = set()
-                else:
-                    freedom[(row, col)] = None
-        return freedom
 
     def _clear_map(self):
         """resets the map"""
         for row in range(9):
             for col in range(9):
-                sx = self.freedom[(row, col)]
-                if sx is not None:
-                    sx.clear()
+                self.freedom[(row, col)].clear()
 
-    def _constrain_row(self, row, col, val):
+    def _constrain_row(self, row, col, val, erase=False):
         for cx in range(9):
             if cx != col:
                 sx = self.freedom[(row, cx)]
-                if sx is not None:
+                if erase:
+                    sx.discard(val)
+                else:
                     sx.add(val)
 
-    def _constrain_col(self, row, col, val):
+    def _constrain_col(self, row, col, val, erase=False):
         for rx in range(9):
             if rx != row:
                 sx = self.freedom[(rx, col)]
-                if sx is not None:
+                if erase:
+                    sx.discard(val)
+                else:
                     sx.add(val)
 
-    def _constrain_subsquare(self, row, col, val):
+    def _constrain_subsquare(self, row, col, val, erase=False):
         for rs, cs in Puzzle.subsquare(row, col):
             if (rs, cs) != (row, col):
                 sx = self.freedom[(rs, cs)]
-                if sx is not None:
+                if erase:
+                    sx.discard(val)
+                else:
                     sx.add(val)
+
+    def constrain_set_cell(self, row, col, val):
+        """update the freedom map by adding the fact that cell (row, col) now contains val."""
+        oval = self.matrix[row][col]
+        if oval is not None:
+            self.constrain_erase_cell(row, col, oval)
+        self._constrain_row(row, col, val)
+        self._constrain_col(row, col, val)
+        self._constrain_subsquare(row, col, val)
+
+
+    def constrain_erase_cell(self, row, col, oval):
+        """update the freedom map by removing the fact that cell (row, col) contains oval."""
+        self._constrain_row(row, col, oval, True)
+        self._constrain_col(row, col, oval, True)
+        self._constrain_subsquare(row, col, oval, True)
+
 
     def constrain(self):
         """computes the set oriented freedom analysis."""
-        self.freedom = self._make_map() #for the time being we just redo when things change
         for row in range(9):
             for col in range(9):
                 val = self.matrix[row][col]
@@ -103,8 +125,6 @@ class Freedom:
         I.e. the complement of the set we store in the map for rthe given cell.
         """
         sx = self.freedom[(row, col)]
-        if sx is None:
-            return None
         return set(range(1, 10)).difference(sx)
 
     def least_free(self):
@@ -113,8 +133,8 @@ class Freedom:
         least_size = 0
         for row in range(9):
             for col in range(9):
-                sx = self.freedom[(row, col)]
-                if sx is not None:
+                if self.matrix[row][col] is None:
+                    sx = self.freedom[(row, col)]
                     sxz = len(sx)
                     if  sxz > least_size:
                         least = (row, col)
@@ -168,14 +188,13 @@ class Puzzle:
 
     def __init__(self, matrix=None):
         self.grid = make_grid()
-        self.freedom = None
+        self.freedom = Freedom(self.grid)
         if matrix is not None:
             for i in range(9):
                 for j in range(9):
                     val = matrix[i][j]
                     if val is not None:
                         self.set_cell(i, j, val)
-        self.freedom = Freedom(self.grid)
 
     def get_row(self, row):
         """get_row returns a copy of the given row."""
@@ -195,8 +214,7 @@ class Puzzle:
             val = self.grid[i][j]
             if val is not None:
                 self.grid[i][j] = None
-                if self.freedom is not None:
-                    self.freedom.constrain()
+                self.freedom.constrain_erase_cell(i, j, val)
             return None
         raise SudokuError(f'erase_cell error: {i} {j}')
 
@@ -206,9 +224,7 @@ class Puzzle:
             oval = self.grid[i][j]
             if oval != val:
                 self.grid[i][j] = val
-                # when we are first creating the puzzle the map is None
-                if self.freedom is not None:
-                    self.freedom.constrain()
+                self.freedom.constrain_set_cell(i, j, val)
             return None
         raise SudokuError(f'set_cell error: {i} {j} {val}')
 
