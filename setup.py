@@ -32,6 +32,7 @@ setup(
     entry_points={
         'console_scripts': [
             'sudokusensei = sudoku.Main:main',
+            'senseitest = sudoku.TestMain:main',
         ],
     },
 

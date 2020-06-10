@@ -1,11 +1,37 @@
 """A library to store useful routines and keep the clutter to a minimum."""
 
+import argparse
+
+
 from yices.Types import Types
 from yices.Terms import Terms
+
+from .Constants import BOARDS
 
 from .StringBuilder import StringBuilder
 
 int_t = Types.int_type()
+
+def parse_arguments():
+    """
+    Parses arguments of the form:
+        sudokusolver --board <board name>
+    Where `board name` must be in the `BOARD` list
+    """
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('--board',
+                            help='Desired board name',
+                            type=str,
+                            choices=BOARDS,
+                            required=False)
+
+    # Creates a dictionary of keys = argument flag, and value = argument
+    args = vars(arg_parser.parse_args())
+    return args['board']
+
+
+
+
 
 def make_grid():
     """make_grid constructs a 9x9 grid all whose entries are initially None."""
@@ -49,11 +75,8 @@ class Freedom:
     whether they contain a value already). The map is updated as the puzzle is mutated.
     """
 
-    def __init__(self, grid):
-        self.matrix = grid
+    def __init__(self):
         self.freedom = make_freedom_map()
-        self.constrain()
-
 
     def _clear_map(self):
         """resets the map"""
@@ -88,9 +111,8 @@ class Freedom:
                 else:
                     sx.add(val)
 
-    def constrain_set_cell(self, row, col, val):
-        """update the freedom map by adding the fact that cell (row, col) now contains val."""
-        oval = self.matrix[row][col]
+    def constrain_set_cell(self, row, col, val, oval):
+        """update the freedom map by adding the fact that cell (row, col) contents is being updated from oval to val."""
         if oval is not None:
             self.constrain_erase_cell(row, col, oval)
         self._constrain_row(row, col, val)
@@ -105,11 +127,11 @@ class Freedom:
         self._constrain_subsquare(row, col, oval, True)
 
 
-    def constrain(self):
+    def constrain(self, matrix):
         """computes the set oriented freedom analysis."""
         for row in range(9):
             for col in range(9):
-                val = self.matrix[row][col]
+                val = matrix[row][col]
                 if val is not None:
                     # val cannot be in any the cell in this row
                     self._constrain_row(row, col, val)
@@ -127,13 +149,13 @@ class Freedom:
         sx = self.freedom[(row, col)]
         return set(range(1, 10)).difference(sx)
 
-    def least_free(self):
+    def least_free(self, matrix):
         """least_free returns the empty cell with the least freedom."""
         least = None
         least_size = 0
         for row in range(9):
             for col in range(9):
-                if self.matrix[row][col] is None:
+                if matrix[row][col] is None:
                     sx = self.freedom[(row, col)]
                     sxz = len(sx)
                     if  sxz > least_size:
@@ -141,6 +163,13 @@ class Freedom:
                         least_size = sxz
         return least
 
+    def clone(self):
+        """return an exact copy that shares no structure."""
+        copy = Freedom()
+        for row in range(9):
+            for col in range(9):
+                copy.freedom[(row, col)].update(self.freedom[(row, col)])
+        return copy
 
 
 class Puzzle:
@@ -188,13 +217,29 @@ class Puzzle:
 
     def __init__(self, matrix=None):
         self.grid = make_grid()
-        self.freedom = Freedom(self.grid)
+        self.freedom = Freedom()
         if matrix is not None:
             for i in range(9):
                 for j in range(9):
                     val = matrix[i][j]
                     if val is not None:
                         self.set_cell(i, j, val)
+
+    def copy(self, puzzle):
+        """copy the state of another puzzle."""
+        self.__init__(puzzle.grid)
+
+    def agree(self, puzzle):
+        """see if two puzzles agree on non-None cells."""
+        for row in range(9):
+            for col in range(9):
+                mine = self.get_cell(row, col)
+                theirs = puzzle.get_cell(row, col)
+                if mine is not None and theirs is not None:
+                    if mine != theirs:
+                        return False
+        return True
+
 
     def get_row(self, row):
         """get_row returns a copy of the given row."""
@@ -224,7 +269,7 @@ class Puzzle:
             oval = self.grid[i][j]
             if oval != val:
                 self.grid[i][j] = val
-                self.freedom.constrain_set_cell(i, j, val)
+                self.freedom.constrain_set_cell(i, j, val, oval)
             return None
         raise SudokuError(f'set_cell error: {i} {j} {val}')
 

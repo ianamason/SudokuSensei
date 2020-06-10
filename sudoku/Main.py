@@ -13,34 +13,13 @@
 
 from tkinter import Tk
 
-import argparse
 import sys
 import pkg_resources as pkg
 
-from .Constants import BOARDS, WIDTH, HEIGHT
+from .Constants import WIDTH, HEIGHT
 from .SudokuGame import SudokuGame
 from .SudokuUI import SudokuUI
-
-
-def parse_arguments():
-    """
-    Parses arguments of the form:
-        sudokusolver --board <board name>
-    Where `board name` must be in the `BOARD` list
-    """
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument('--board',
-                            help='Desired board name',
-                            type=str,
-                            choices=BOARDS,
-                            required=False)
-
-    # Creates a dictionary of keys = argument flag, and value = argument
-    args = vars(arg_parser.parse_args())
-    return args['board']
-
-
-
+from .SudokuLib import parse_arguments
 
 def main():
     """main is the pip entry point."""
@@ -48,8 +27,10 @@ def main():
 
         board_name = parse_arguments()
 
-        board_file = pkg.resource_filename('sudoku', f'data/{board_name}.sudoku')
+        if board_name is None:
+            board_name = 'empty'
 
+        board_file = pkg.resource_filename('sudoku', f'data/{board_name}.sudoku')
         game = SudokuGame(board_file)
 
         game.start()
