@@ -11,10 +11,6 @@
 # All changes are recorded in the git commits.
 #
 
-
-# Available sudoku boards
-BOARDS = ['debug', 'n00b', 'l33t', 'empty', 'error', 'escargot', 'extreme1', 'extreme2', 'extreme3', 'extreme4', 'hardest', '351', '648']
-
 # Pixels around the board
 MARGIN = 20
 

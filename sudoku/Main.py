@@ -14,6 +14,8 @@
 from tkinter import Tk
 
 import sys
+import os.path
+
 import pkg_resources as pkg
 
 from .Constants import WIDTH, HEIGHT
@@ -31,6 +33,11 @@ def main():
             board_name = 'empty'
 
         board_file = pkg.resource_filename('sudoku', f'data/{board_name}.sudoku')
+
+        if not os.path.exists(board_file):
+            print(f'No such board: {board_file}')
+            return
+
         game = SudokuGame(board_file)
 
         game.start()

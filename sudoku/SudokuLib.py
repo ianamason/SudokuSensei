@@ -6,8 +6,6 @@ import argparse
 from yices.Types import Types
 from yices.Terms import Terms
 
-from .Constants import BOARDS
-
 from .StringBuilder import StringBuilder
 
 int_t = Types.int_type()
@@ -22,7 +20,6 @@ def parse_arguments():
     arg_parser.add_argument('--board',
                             help='Desired board name',
                             type=str,
-                            choices=BOARDS,
                             required=False)
 
     # Creates a dictionary of keys = argument flag, and value = argument

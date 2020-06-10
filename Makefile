@@ -79,6 +79,6 @@ lint: check_lint
 
 lint_all: check_lint
 # for detecting more than just errors:
-	@ $(PYLINT) --rcfile=.pylintrc  sudoku/*.py *.py
+	@ $(PYLINT) --disable=duplicate-code --rcfile=.pylintrc  sudoku/*.py *.py
 
 .PHONY: lint check_lint rstify check_md2rst

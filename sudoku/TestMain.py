@@ -1,5 +1,7 @@
 """TestMain is a pip entry point for testing purposes."""
 
+import os.path
+
 import pkg_resources as pkg
 
 from .SudokuLib import parse_arguments, Puzzle
@@ -9,12 +11,17 @@ from .SudokuGenerator import solve
 
 def main():
     """main is the pip entry point."""
+
     board_name = parse_arguments()
 
     if board_name is None:
         board_name = 'empty'
 
     board_file = pkg.resource_filename('sudoku', f'data/{board_name}.sudoku')
+
+    if not os.path.exists(board_file):
+        print(f'No such board: {board_file}')
+        return
 
     game = SudokuGame(board_file)
 
