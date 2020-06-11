@@ -136,7 +136,7 @@ def solve_recurse(ctx, freedom, diff):
     diff += bf * bf
 
     for val in free:
-        new_freedom = freedom.clone()
+        new_freedom = freedom.clone()  #FIXME: I don't think cloning is necessary
         new_freedom.constrain_set_cell(row, col, val, None)
         ctx.problem.set_cell(row, col, val)
         solve_recurse(ctx, new_freedom, diff)
