@@ -1125,8 +1125,7 @@ static int action_generate(const struct options *o)
 	choose_grid(grid);
 	memcpy(puzzle, grid, ELEMENTS * sizeof(puzzle[0]));
 
-	diff = harden_puzzle(grid, puzzle, o->max_iter,
-			     o->max_diff, o->target_diff);
+	diff = harden_puzzle(grid, puzzle, o->max_iter, o->max_diff, o->target_diff);
 	print_grid_opt(o, puzzle);
 	printf("\nDifficulty: %d\n", diff);
 

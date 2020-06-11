@@ -215,6 +215,7 @@ class Puzzle:
     def __init__(self, matrix=None):
         self.grid = make_grid()
         self.freedom = Freedom()
+        self.empty_cells = 81
         if matrix is not None:
             for i in range(9):
                 for j in range(9):
@@ -255,6 +256,7 @@ class Puzzle:
         if 0 <= i <= 8 and 0 <= j <= 8:
             val = self.grid[i][j]
             if val is not None:
+                self.empty_cells += 1
                 self.grid[i][j] = None
                 self.freedom.constrain_erase_cell(i, j, val)
             return None
@@ -265,6 +267,8 @@ class Puzzle:
         if 0 <= i <= 8 and 0 <= j <= 8 and 1 <= val <= 9:
             oval = self.grid[i][j]
             if oval != val:
+                if oval is None and val is not None:
+                    self.empty_cells -= 1
                 self.grid[i][j] = val
                 self.freedom.constrain_set_cell(i, j, val, oval)
             return None
