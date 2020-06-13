@@ -63,7 +63,7 @@ class SudokuGame:
         if freedom is not None:
             vals = ' '.join([str(x) for x in range(1, 10) if x in freedom])
             print(f'[{row}, {col}]: {vals}')
-        print(f'least free: {self.puzzle.freedom.least_free(self.puzzle.grid)}')
+        print(f'least free: {self.puzzle.least_free()}')
 
     def check_win(self):
         """check_win determines if the current game has been solved."""

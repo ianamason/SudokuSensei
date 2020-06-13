@@ -32,11 +32,11 @@
  */
 
 #ifndef ORDER
-#define ORDER		3
+#define ORDER       3
 #endif
 
-#define DIM		(ORDER * ORDER)
-#define ELEMENTS	(DIM * DIM)
+#define DIM     (ORDER * ORDER)
+#define ELEMENTS    (DIM * DIM)
 
 /************************************************************************
  * Parsing and printing
@@ -46,193 +46,195 @@
  */
 
 struct hline_def {
-	const char	*start;
-	const char	*mid;
-	const char	*end;
-	const char	*major;
-	const char	*minor;
+  const char    *start;
+  const char    *mid;
+  const char    *end;
+  const char    *major;
+  const char    *minor;
 };
 
 struct gridline_def {
-	struct hline_def	top;
-	struct hline_def	major;
-	struct hline_def	minor;
-	struct hline_def	bottom;
-	const char		*vl_major;
-	const char		*vl_minor;
+  struct hline_def  top;
+  struct hline_def  major;
+  struct hline_def  minor;
+  struct hline_def  bottom;
+  const char        *vl_major;
+  const char        *vl_minor;
 };
 
-const static struct gridline_def ascii_def = {
-	.top = { .start = "+", .mid = "-", .end = "+",
-		 .major = "+", .minor = "-" },
-	.major = { .start = "+", .mid = "-", .end = "+",
-		   .major = "+", .minor = "-" },
-	.minor = { .start = "|", .mid = ".", .end = "|",
-		   .major = "|", .minor = ":" },
-	.bottom = { .start = "+", .mid = "-", .end = "+",
-		    .major = "+", .minor = "-" },
-	.vl_major = "|",
-	.vl_minor = ":"
-};
+const static struct gridline_def ascii_def =
+  {
+   .top = { .start = "+", .mid = "-", .end = "+",
+            .major = "+", .minor = "-" },
+   .major = { .start = "+", .mid = "-", .end = "+",
+              .major = "+", .minor = "-" },
+   .minor = { .start = "|", .mid = ".", .end = "|",
+              .major = "|", .minor = ":" },
+   .bottom = { .start = "+", .mid = "-", .end = "+",
+               .major = "+", .minor = "-" },
+   .vl_major = "|",
+   .vl_minor = ":"
+  };
 
-const static struct gridline_def utf8_def = {
-	.top = { .start = "\xe2\x95\x94", .mid = "\xe2\x95\x90",
-		 .end = "\xe2\x95\x97",
-		 .major = "\xe2\x95\xa6", .minor = "\xe2\x95\xa4"},
-	.major = { .start = "\xe2\x95\xa0", .mid = "\xe2\x95\x90",
-		   .end = "\xe2\x95\xa3",
-		   .major = "\xe2\x95\xac", .minor = "\xe2\x95\xaa" },
-	.minor = { .start = "\xe2\x95\x9f", .mid = "\xe2\x94\x80",
-		   .end = "\xe2\x95\xa2",
-		   .major = "\xe2\x95\xab", .minor = "\xe2\x94\xbc" },
-        .bottom = { .start = "\xe2\x95\x9a", .mid = "\xe2\x95\x90",
-		    .end = "\xe2\x95\x9d",
-                    .major = "\xe2\x95\xa9", .minor = "\xe2\x95\xa7" },
-	.vl_major = "\xe2\x95\x91",
-	.vl_minor = "\xe2\x94\x82"
-};
+const static struct gridline_def utf8_def =
+  {
+   .top = { .start = "\xe2\x95\x94", .mid = "\xe2\x95\x90",
+            .end = "\xe2\x95\x97",
+            .major = "\xe2\x95\xa6", .minor = "\xe2\x95\xa4"},
+   .major = { .start = "\xe2\x95\xa0", .mid = "\xe2\x95\x90",
+              .end = "\xe2\x95\xa3",
+              .major = "\xe2\x95\xac", .minor = "\xe2\x95\xaa" },
+   .minor = { .start = "\xe2\x95\x9f", .mid = "\xe2\x94\x80",
+              .end = "\xe2\x95\xa2",
+              .major = "\xe2\x95\xab", .minor = "\xe2\x94\xbc" },
+   .bottom = { .start = "\xe2\x95\x9a", .mid = "\xe2\x95\x90",
+               .end = "\xe2\x95\x9d",
+               .major = "\xe2\x95\xa9", .minor = "\xe2\x95\xa7" },
+   .vl_major = "\xe2\x95\x91",
+   .vl_minor = "\xe2\x94\x82"
+  };
 
 static int read_grid(uint8_t *grid)
 {
-	int x = 0;
-	int y = 0;
-	int c;
-	int can_skip = 0;
+  int x = 0;
+  int y = 0;
+  int c;
+  int can_skip = 0;
 
-	memset(grid, 0, sizeof(grid[0]) * ELEMENTS);
+  memset(grid, 0, sizeof(grid[0]) * ELEMENTS);
 
-	while ((c = getchar()) >= 0) {
-		if (c == '\n') {
-			if (x > 0)
-				y++;
-			x = 0;
-			can_skip = 0;
-		} else if (c == '.' || c == '-') {
-			can_skip = 0;
-		} else if (c == '_' || c == '0') {
-			x++;
-		} else if (c == 0x82 || c == 0x91 || c == '|' || c == ':') {
-			if (can_skip)
-				x++;
-			can_skip = 1;
-		} else if (isalnum(c) && x < DIM && y < DIM) {
-			int v;
+  while ((c = getchar()) >= 0) {
+    if (c == '\n') {
+      if (x > 0)
+        y++;
+      x = 0;
+      can_skip = 0;
+    } else if (c == '.' || c == '-') {
+      can_skip = 0;
+    } else if (c == '_' || c == '0') {
+      x++;
+    } else if (c == 0x82 || c == 0x91 || c == '|' || c == ':') {
+      if (can_skip)
+        x++;
+      can_skip = 1;
+    } else if (isalnum(c) && x < DIM && y < DIM) {
+      int v;
 
-			if (isdigit(c))
-				v = c - '0';
-			else if (isupper(c))
-				v = c - 'A' + 10;
-			else
-				v = c - 'a' + 10;
+      if (isdigit(c))
+        v = c - '0';
+      else if (isupper(c))
+        v = c - 'A' + 10;
+      else
+        v = c - 'a' + 10;
 
-			if (v >= 1 && v <= DIM) {
-				grid[y * DIM + x] = v;
-				x++;
-				can_skip = 0;
-			}
-		}
-	}
+      if (v >= 1 && v <= DIM) {
+        grid[y * DIM + x] = v;
+        x++;
+        can_skip = 0;
+      }
+    }
+  }
 
-	if ((y <= DIM - 1) || ((y == DIM - 1) && (x < DIM))) {
-		fprintf(stderr, "Too few cells in grid. Input ran out at "
-			"position (%d, %d)\n", x, y);
-		return -1;
-	}
+  if ((y <= DIM - 1) || ((y == DIM - 1) && (x < DIM))) {
+    fprintf(stderr, "Too few cells in grid. Input ran out at "
+            "position (%d, %d)\n", x, y);
+    return -1;
+  }
 
-	return 0;
+  return 0;
 }
 
 static const char alphabet[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 static void grid2fp(FILE* fp, const uint8_t *grid)
 {
-	int y;
-	for (y = 0; y < DIM; y++) {
-      int x;
-      for (x = 0; x < DIM; x++) {
-        int v = grid[y * DIM + x];
-        if (v)
-          fprintf(fp, "%c", alphabet[v]);
-        else
-          fprintf(fp, "0");
-      }
-      fprintf(fp, "\n");
-	}
+  int y;
+  for (y = 0; y < DIM; y++) {
+    int x;
+    for (x = 0; x < DIM; x++) {
+      int v = grid[y * DIM + x];
+      if (v)
+        fprintf(fp, "%c", alphabet[v]);
+      else
+        fprintf(fp, "0");
+    }
+    fprintf(fp, "\n");
+  }
 }
 
 static void print_grid(const uint8_t *grid)
 {
-	int y;
+  int y;
 
-	for (y = 0; y < DIM; y++) {
-		int x;
+  for (y = 0; y < DIM; y++) {
+    int x;
 
-		for (x = 0; x < DIM; x++) {
-			int v = grid[y * DIM + x];
+    for (x = 0; x < DIM; x++) {
+      int v = grid[y * DIM + x];
 
-			if (x)
-				printf(" ");
+      if (x)
+        printf(" ");
 
-			if (v)
-				printf("%c", alphabet[v]);
-			else
-				printf("_");
-		}
+      if (v)
+        printf("%c", alphabet[v]);
+      else
+        printf("_");
+    }
 
-		printf("\n");
-	}
+    printf("\n");
+  }
 }
 
 static void draw_hline(const struct hline_def *def)
 {
-	int i;
+  int i;
 
-	printf("%s", def->start);
-	for (i = 0; i < DIM; i++) {
-		printf("%s%s%s", def->mid, def->mid, def->mid);
+  printf("%s", def->start);
+  for (i = 0; i < DIM; i++) {
+    printf("%s%s%s", def->mid, def->mid, def->mid);
 
-		if (i + 1 < DIM)
-			printf("%s", ((i + 1) % ORDER) ?
-				def->minor : def->major);
-	}
-	printf("%s\n", def->end);
+    if (i + 1 < DIM)
+      printf("%s", ((i + 1) % ORDER) ?
+             def->minor : def->major);
+  }
+  printf("%s\n", def->end);
 }
 
 static void print_grid_pretty(const struct gridline_def *def,
-			      const uint8_t *grid)
+                              const uint8_t *grid)
 {
-	int y;
+  int y;
 
-	draw_hline(&def->top);
+  draw_hline(&def->top);
 
-	for (y = 0; y < DIM; y++) {
-		int x;
+  for (y = 0; y < DIM; y++) {
+    int x;
 
-		for (x = 0; x < DIM; x++) {
-			int v = grid[y * DIM + x];
+    for (x = 0; x < DIM; x++) {
+      int v = grid[y * DIM + x];
 
-			if (x % ORDER)
-				printf("%s", def->vl_minor);
-			else
-				printf("%s", def->vl_major);
+      if (x % ORDER)
+        printf("%s", def->vl_minor);
+      else
+        printf("%s", def->vl_major);
 
-			if (v)
-				printf(" %c ", alphabet[v]);
-			else
-				printf("   ");
-		}
+      if (v)
+        printf(" %c ", alphabet[v]);
+      else
+        printf("   ");
+    }
 
-		printf("%s\n", def->vl_major);
+    printf("%s\n", def->vl_major);
 
-		if (y + 1 < DIM) {
-			if ((y + 1) % ORDER)
-				draw_hline(&def->minor);
-			else
-				draw_hline(&def->major);
-		}
-	}
+    if (y + 1 < DIM) {
+      if ((y + 1) % ORDER)
+        draw_hline(&def->minor);
+      else
+        draw_hline(&def->major);
+    }
+  }
 
-	draw_hline(&def->bottom);
+  draw_hline(&def->bottom);
 }
 
 /************************************************************************
@@ -263,98 +265,98 @@ typedef uint16_t set_t;
 
 static int count_bits(int x)
 {
-	int count = 0;
+  int count = 0;
 
-	while (x) {
-		x &= x - 1;
-		count++;
-	}
+  while (x) {
+    x &= x - 1;
+    count++;
+  }
 
-	return count;
+  return count;
 }
 
 static void freedom_eliminate(set_t *freedom, int x, int y, int v)
 {
-	set_t mask = ~SINGLETON(v);
-	int b;
-	int i, j;
-	set_t saved = freedom[y * DIM + x];
+  set_t mask = ~SINGLETON(v);
+  int b;
+  int i, j;
+  set_t saved = freedom[y * DIM + x];
 
-	b = x;
-	for (i = 0; i < DIM; i++) {
-		freedom[b] &= mask;
-		b += DIM;
-	}
+  b = x;
+  for (i = 0; i < DIM; i++) {
+    freedom[b] &= mask;
+    b += DIM;
+  }
 
-	b = y * DIM;
-	for (i = 0; i < DIM; i++)
-		freedom[b + i] &= mask;
+  b = y * DIM;
+  for (i = 0; i < DIM; i++)
+    freedom[b + i] &= mask;
 
-	b = (y - y % ORDER) * DIM + x - x % ORDER;
-	for (i = 0; i < ORDER; i++) {
-		for (j = 0; j < ORDER; j++)
-			freedom[b + j] &= mask;
+  b = (y - y % ORDER) * DIM + x - x % ORDER;
+  for (i = 0; i < ORDER; i++) {
+    for (j = 0; j < ORDER; j++)
+      freedom[b + j] &= mask;
 
-		b += DIM;
-	}
+    b += DIM;
+  }
 
-	freedom[y * DIM + x] = saved;
+  freedom[y * DIM + x] = saved;
 }
 
 static void init_freedom(const uint8_t *problem, set_t *freedom)
 {
-	int x, y;
+  int x, y;
 
-	for (x = 0; x < ELEMENTS; x++)
-		freedom[x] = ALL_VALUES;
+  for (x = 0; x < ELEMENTS; x++)
+    freedom[x] = ALL_VALUES;
 
-	for (y = 0; y < DIM; y++)
-		for (x = 0; x < DIM; x++) {
-			int v = problem[y * DIM + x];
+  for (y = 0; y < DIM; y++)
+    for (x = 0; x < DIM; x++) {
+      int v = problem[y * DIM + x];
 
-			if (v)
-				freedom_eliminate(freedom, x, y, v);
-		}
+      if (v)
+        freedom_eliminate(freedom, x, y, v);
+    }
 }
 
 static int sanity_check(const uint8_t *problem, const set_t *freedom)
 {
-	int i;
+  int i;
 
-	for (i = 0; i < ELEMENTS; i++) {
-		int v = problem[i];
+  for (i = 0; i < ELEMENTS; i++) {
+    int v = problem[i];
 
-		if (v) {
-			set_t f = freedom[i];
+    if (v) {
+      set_t f = freedom[i];
 
-			if (!(f & SINGLETON(v)))
-				return -1;
-		}
-	}
+      if (!(f & SINGLETON(v)))
+        return -1;
+    }
+  }
 
-	return 0;
+  return 0;
 }
 
 static int search_least_free(const uint8_t *problem, const set_t *freedom)
 {
-	int i;
-	int best_index = -1;
-	int best_score = -1;
+  int i;
+  int best_index = -1;
+  int best_score = -1;
 
-	for (i = 0; i < ELEMENTS; i++) {
-		int v = problem[i];
+  for (i = 0; i < ELEMENTS; i++) {
+    int v = problem[i];
 
-		if (!v) {
-			int score = count_bits(freedom[i]);
+    if (!v) {
+      int score = count_bits(freedom[i]);
 
-			if (best_score < 0 || score < best_score) {
-				best_index = i;
-				best_score = score;
-			}
-		}
-	}
+      if (best_score < 0 || score < best_score) {
+        best_index = i;
+        best_score = score;
+      }
+    }
+  }
 
-	return best_index;
+  return best_index;
 }
 
 /************************************************************************
@@ -378,97 +380,97 @@ static int search_least_free(const uint8_t *problem, const set_t *freedom)
 
 #ifndef NO_SOFA
 struct sofa_context {
-	const uint8_t		*grid;
-	const set_t		*freedom;
+  const uint8_t     *grid;
+  const set_t       *freedom;
 
-	int			best[DIM];
-	int			best_size;
-	int			best_value;
+  int           best[DIM];
+  int           best_size;
+  int           best_value;
 };
 
 static void sofa_set(struct sofa_context *ctx, const int *set)
 {
-	int count[DIM];
-	int i;
-	int best = -1;
-	set_t missing = ALL_VALUES;
+  int count[DIM];
+  int i;
+  int best = -1;
+  set_t missing = ALL_VALUES;
 
-	/* Find out what's missing from the set, and how many available
-	 * slots for each missing number.
-	 */
-	memset(count, 0, sizeof(count));
-	for (i = 0; i < DIM; i++) {
-		int v = ctx->grid[set[i]];
+  /* Find out what's missing from the set, and how many available
+   * slots for each missing number.
+   */
+  memset(count, 0, sizeof(count));
+  for (i = 0; i < DIM; i++) {
+    int v = ctx->grid[set[i]];
 
-		if (v) {
-			missing &= ~SINGLETON(v);
-		} else {
-			set_t freedom = ctx->freedom[set[i]];
-			int j;
+    if (v) {
+      missing &= ~SINGLETON(v);
+    } else {
+      set_t freedom = ctx->freedom[set[i]];
+      int j;
 
-			for (j = 0; j < DIM; j++)
-				if (freedom & (1 << j))
-					count[j]++;
-		}
-	}
+      for (j = 0; j < DIM; j++)
+        if (freedom & (1 << j))
+          count[j]++;
+    }
+  }
 
-	/* Look for the missing number with the fewest available slots. */
-	for (i = 0; i < DIM; i++)
-		if ((missing & (1 << i)) &&
-		    (best < 0 || count[i] < count[best]))
-			best = i;
+  /* Look for the missing number with the fewest available slots. */
+  for (i = 0; i < DIM; i++)
+    if ((missing & (1 << i)) &&
+        (best < 0 || count[i] < count[best]))
+      best = i;
 
-	/* Did we find anything? */
-	if (best < 0)
-		return;
+  /* Did we find anything? */
+  if (best < 0)
+    return;
 
-	/* If it's better than anything we've found so far, save the result */
-	if (ctx->best_size < 0 || count[best] < ctx->best_size) {
-		int j = 0;
-		set_t mask = 1 << best;
+  /* If it's better than anything we've found so far, save the result */
+  if (ctx->best_size < 0 || count[best] < ctx->best_size) {
+    int j = 0;
+    set_t mask = 1 << best;
 
-		ctx->best_value = best + 1;
-		ctx->best_size = count[best];
+    ctx->best_value = best + 1;
+    ctx->best_size = count[best];
 
-		for (i = 0; i < DIM; i++)
-			if (!ctx->grid[set[i]] &&
-			    (ctx->freedom[set[i]] & mask))
-				ctx->best[j++] = set[i];
-	}
+    for (i = 0; i < DIM; i++)
+      if (!ctx->grid[set[i]] &&
+          (ctx->freedom[set[i]] & mask))
+        ctx->best[j++] = set[i];
+  }
 }
 
 static int sofa(const uint8_t *grid, const set_t *freedom, int *set, int *value)
 {
-	struct sofa_context ctx;
-	int i;
+  struct sofa_context ctx;
+  int i;
 
-	memset(&ctx, 0, sizeof(ctx));
-	ctx.grid = grid;
-	ctx.freedom = freedom;
-	ctx.best_size = -1;
-	ctx.best_value = -1;
+  memset(&ctx, 0, sizeof(ctx));
+  ctx.grid = grid;
+  ctx.freedom = freedom;
+  ctx.best_size = -1;
+  ctx.best_value = -1;
 
-	for (i = 0; i < DIM; i++) {
-		int b = (i / ORDER) * ORDER * DIM + (i % ORDER) * ORDER;
-		int set[DIM];
-		int j;
+  for (i = 0; i < DIM; i++) {
+    int b = (i / ORDER) * ORDER * DIM + (i % ORDER) * ORDER;
+    int set[DIM];
+    int j;
 
-		for (j = 0; j < DIM; j++)
-			set[j] = j * DIM + i;
-		sofa_set(&ctx, set);
+    for (j = 0; j < DIM; j++)
+      set[j] = j * DIM + i;
+    sofa_set(&ctx, set);
 
-		for (j = 0; j < DIM; j++)
-			set[j] = i * DIM + j;
-		sofa_set(&ctx, set);
+    for (j = 0; j < DIM; j++)
+      set[j] = i * DIM + j;
+    sofa_set(&ctx, set);
 
-		for (j = 0; j < DIM; j++)
-			set[j] = b + (j / ORDER) * DIM + j % ORDER;
-		sofa_set(&ctx, set);
-	}
+    for (j = 0; j < DIM; j++)
+      set[j] = b + (j / ORDER) * DIM + j % ORDER;
+    sofa_set(&ctx, set);
+  }
 
-	memcpy(set, ctx.best, sizeof(ctx.best));
-	*value = ctx.best_value;
-	return ctx.best_size;
+  memcpy(set, ctx.best, sizeof(ctx.best));
+  *value = ctx.best_value;
+  return ctx.best_size;
 }
 #endif
 
@@ -505,121 +507,120 @@ static int sofa(const uint8_t *grid, const set_t *freedom, int *set, int *value)
  */
 
 struct solve_context {
-	uint8_t		problem[ELEMENTS];
-	int		count;
-	uint8_t		*solution;
-	int		branch_score;
+  uint8_t       problem[ELEMENTS];
+  int       count;
+  uint8_t       *solution;
+  int       branch_score;
 };
 
-static void solve_recurse(struct solve_context *ctx, const set_t *freedom,
-			  int diff)
+static void solve_recurse(struct solve_context *ctx, const set_t *freedom, int diff)
 {
-	set_t new_free[ELEMENTS];
-	set_t mask;
-	int r;
-	int i;
-	int bf;
+  set_t new_free[ELEMENTS];
+  set_t mask;
+  int r;
+  int i;
+  int bf;
 
-	r = search_least_free(ctx->problem, freedom);
-	if (r < 0) {
-		if (!ctx->count) {
-			ctx->branch_score = diff;
-			if (ctx->solution)
-				memcpy(ctx->solution, ctx->problem,
-				       ELEMENTS * sizeof(ctx->solution[0]));
-		}
+  r = search_least_free(ctx->problem, freedom);
+  if (r < 0) {
+    if (!ctx->count) {
+      ctx->branch_score = diff;
+      if (ctx->solution)
+        memcpy(ctx->solution, ctx->problem, ELEMENTS * sizeof(ctx->solution[0]));
+    }
 
-		ctx->count++;
-		return;
-	}
+    ctx->count++;
+    return;
+  }
 
-	mask = freedom[r];
+  mask = freedom[r];
 
 #ifndef NO_SOFA
-	/* If we can't determine a cell value, see if set-oriented
-	 * backtracking provides a smaller branching factor.
-	 */
-	if (mask & (mask - 1)) {
-		int set[DIM];
-		int value;
-		int size;
+  /* If we can't determine a cell value, see if set-oriented
+   * backtracking provides a smaller branching factor.
+   */
+  if (mask & (mask - 1)) {
+    int set[DIM];
+    int value;
+    int size;
 
-		size = sofa(ctx->problem, freedom, set, &value);
-		if (size >= 0 && size < count_bits(mask)) {
-			bf = size - 1;
-			diff += bf * bf;
+    size = sofa(ctx->problem, freedom, set, &value);
+    if (size >= 0 && size < count_bits(mask)) {
+      bf = size - 1;
+      diff += bf * bf;
 
-			for (i = 0; i < size; i++) {
-				int s = set[i];
+      for (i = 0; i < size; i++) {
+        int s = set[i];
 
-				memcpy(new_free, freedom, sizeof(new_free));
-				freedom_eliminate(new_free,
-						  s % DIM, s / DIM, value);
+        memcpy(new_free, freedom, sizeof(new_free));
+        freedom_eliminate(new_free, s % DIM, s / DIM, value);
+        ctx->problem[s] = value;
+        solve_recurse(ctx, new_free, diff);
+        ctx->problem[s] = 0;
 
-				ctx->problem[s] = value;
-				solve_recurse(ctx, new_free, diff);
-				ctx->problem[s] = 0;
+        if (ctx->count >= 2)
+          return;
+      }
 
-				if (ctx->count >= 2)
-					return;
-			}
-
-			return;
-		}
-	}
+      return;
+    }
+  }
 #endif
 
-	/* Otherwise, fall back to cell-oriented backtracking. */
-	bf = count_bits(mask) - 1;
-	diff += bf * bf;
+  /* Otherwise, fall back to cell-oriented backtracking. */
+  bf = count_bits(mask) - 1;
+  diff += bf * bf;
 
-	for (i = 0; i < DIM; i++)
-		if (mask & (1 << i)) {
-			memcpy(new_free, freedom, sizeof(new_free));
-			freedom_eliminate(new_free, r % DIM, r / DIM, i + 1);
-			ctx->problem[r] = i + 1;
-			solve_recurse(ctx, new_free, diff);
+  for (i = 0; i < DIM; i++)
+    if (mask & (1 << i)) {
+      memcpy(new_free, freedom, sizeof(new_free));
+      freedom_eliminate(new_free, r % DIM, r / DIM, i + 1);
+      ctx->problem[r] = i + 1;
+      solve_recurse(ctx, new_free, diff);
 
-			if (ctx->count >= 2)
-				return;
-		}
+      if (ctx->count >= 2)
+        return;
+    }
 
-	ctx->problem[r] = 0;
+  ctx->problem[r] = 0;
 }
 
 static int solve(const uint8_t *problem, uint8_t *solution, int *diff)
 {
-	struct solve_context ctx;
-	set_t freedom[ELEMENTS];
+  struct solve_context ctx;
+  set_t freedom[ELEMENTS];
 
-	memcpy(ctx.problem, problem, sizeof(ctx.problem));
-	ctx.count = 0;
-	ctx.branch_score = 0;
-	ctx.solution = solution;
+  memcpy(ctx.problem, problem, sizeof(ctx.problem));
+  ctx.count = 0;
+  ctx.branch_score = 0;
+  ctx.solution = solution;
 
-	init_freedom(problem, freedom);
-	if (sanity_check(problem, freedom) < 0)
-		return -1;
+  init_freedom(problem, freedom);
+  if (sanity_check(problem, freedom) < 0)
+    return -1;
 
-	solve_recurse(&ctx, freedom, 0);
+  solve_recurse(&ctx, freedom, 0);
 
-	/* Calculate a difficulty score */
-	if (diff) {
-		int empty = 0;
-		int mult = 1;
-		int i;
+  /* Calculate a difficulty score */
+  if (diff) {
+    int empty = 0;
+    int mult = 1;
+    int i;
 
-		for (i = 0; i < ELEMENTS; i++)
-			if (!problem[i])
-				empty++;
+    for (i = 0; i < ELEMENTS; i++)
+      if (!problem[i])
+        empty++;
 
-		while (mult <= ELEMENTS)
-			mult *= 10;
+    while (mult <= ELEMENTS)
+      mult *= 10;
 
-		*diff = ctx.branch_score * mult + empty;
-	}
+    *diff = ctx.branch_score * mult + empty;
 
-	return ctx.count - 1;
+    printf("solver returns %d diff %d empty %d\n", ctx.count - 1, diff ? *diff : 0, empty);
+
+  }
+
+  return ctx.count - 1;
 }
 
 /************************************************************************
@@ -637,171 +638,171 @@ static int solve(const uint8_t *problem, uint8_t *solution, int *diff)
 
 static int pick_value(set_t set)
 {
-	int x = random() % count_bits(set);
-	int i;
+  int x = random() % count_bits(set);
+  int i;
 
-	for (i = 0; i < DIM; i++)
-		if (set & (1 << i)) {
-			if (!x)
-				return i + 1;
-			x--;
-		}
+  for (i = 0; i < DIM; i++)
+    if (set & (1 << i)) {
+      if (!x)
+        return i + 1;
+      x--;
+    }
 
-	return 0;
+  return 0;
 }
 
 static void choose_b1(uint8_t *problem)
 {
-	set_t set = ALL_VALUES;
-	int i, j;
+  set_t set = ALL_VALUES;
+  int i, j;
 
-	for (i = 0; i < ORDER; i++)
-		for (j = 0; j < ORDER; j++) {
-			int v = pick_value(set);
+  for (i = 0; i < ORDER; i++)
+    for (j = 0; j < ORDER; j++) {
+      int v = pick_value(set);
 
-			problem[i * DIM + j] = v;
-			set &= ~SINGLETON(v);
-		}
+      problem[i * DIM + j] = v;
+      set &= ~SINGLETON(v);
+    }
 }
 
 #if ORDER == 3
 static void choose_b2(uint8_t *problem)
 {
-	set_t used[ORDER];
-	set_t chosen[ORDER];
-	set_t set_x, set_y;
-	int i, j;
+  set_t used[ORDER];
+  set_t chosen[ORDER];
+  set_t set_x, set_y;
+  int i, j;
 
-	memset(used, 0, sizeof(used));
-	memset(chosen, 0, sizeof(chosen));
+  memset(used, 0, sizeof(used));
+  memset(chosen, 0, sizeof(chosen));
 
-	/* Gather used values from B1 by box-row */
-	for (i = 0; i < ORDER; i++)
-		for (j = 0; j < ORDER; j++)
-			used[i] |= SINGLETON(problem[i * DIM + j]);
+  /* Gather used values from B1 by box-row */
+  for (i = 0; i < ORDER; i++)
+    for (j = 0; j < ORDER; j++)
+      used[i] |= SINGLETON(problem[i * DIM + j]);
 
-	/* Choose the top box-row for B2 */
-	set_x = used[1] | used[2];
-	for (i = 0; i < ORDER; i++) {
-		int v = pick_value(set_x);
-		set_t mask = SINGLETON(v);
+  /* Choose the top box-row for B2 */
+  set_x = used[1] | used[2];
+  for (i = 0; i < ORDER; i++) {
+    int v = pick_value(set_x);
+    set_t mask = SINGLETON(v);
 
-		chosen[0] |= mask;
-		set_x &= ~mask;
-	}
+    chosen[0] |= mask;
+    set_x &= ~mask;
+  }
 
-	/* Choose values for the middle box-row, as long as we can */
-	set_x = (used[0] | used[2]) & ~chosen[0];
-	set_y = (used[0] | used[1]) & ~chosen[0];
+  /* Choose values for the middle box-row, as long as we can */
+  set_x = (used[0] | used[2]) & ~chosen[0];
+  set_y = (used[0] | used[1]) & ~chosen[0];
 
-	while (count_bits(set_y) > 3) {
-		int v = pick_value(set_x);
-		set_t mask = SINGLETON(v);
+  while (count_bits(set_y) > 3) {
+    int v = pick_value(set_x);
+    set_t mask = SINGLETON(v);
 
-		chosen[1] |= mask;
-		set_x &= ~mask;
-		set_y &= ~mask;
-	}
+    chosen[1] |= mask;
+    set_x &= ~mask;
+    set_y &= ~mask;
+  }
 
-	/* We have no choice for the remainder */
-	chosen[1] |= set_x & ~set_y;
-	chosen[2] |= set_y;
+  /* We have no choice for the remainder */
+  chosen[1] |= set_x & ~set_y;
+  chosen[2] |= set_y;
 
-	/* Permute the triplets in each box-row */
-	for (i = 0; i < ORDER; i++) {
-		set_t set = chosen[i];
-		int j;
+  /* Permute the triplets in each box-row */
+  for (i = 0; i < ORDER; i++) {
+    set_t set = chosen[i];
+    int j;
 
-		for (j = 0; j < ORDER; j++) {
-			int v = pick_value(set);
+    for (j = 0; j < ORDER; j++) {
+      int v = pick_value(set);
 
-			problem[i * DIM + j + ORDER] = v;
-			set &= ~SINGLETON(v);
-		}
-	}
+      problem[i * DIM + j + ORDER] = v;
+      set &= ~SINGLETON(v);
+    }
+  }
 }
 
 static void choose_b3(uint8_t *problem)
 {
-	int i;
+  int i;
 
-	for (i = 0; i < ORDER; i++) {
-		set_t set = ALL_VALUES;
-		int j;
+  for (i = 0; i < ORDER; i++) {
+    set_t set = ALL_VALUES;
+    int j;
 
-		/* Eliminate already-used values in this row */
-		for (j = 0; j + ORDER < DIM; j++)
-			set &= ~SINGLETON(problem[i * DIM + j]);
+    /* Eliminate already-used values in this row */
+    for (j = 0; j + ORDER < DIM; j++)
+      set &= ~SINGLETON(problem[i * DIM + j]);
 
-		/* Permute the remaining values in the last box-row */
-		for (j = 0; j < ORDER; j++) {
-			int v = pick_value(set);
+    /* Permute the remaining values in the last box-row */
+    for (j = 0; j < ORDER; j++) {
+      int v = pick_value(set);
 
-			problem[i * DIM + DIM - ORDER + j] = v;
-			set &= ~SINGLETON(v);
-		}
-	}
+      problem[i * DIM + DIM - ORDER + j] = v;
+      set &= ~SINGLETON(v);
+    }
+  }
 }
 #endif /* ORDER == 3 */
 
 static void choose_col1(uint8_t *problem)
 {
-	set_t set = ALL_VALUES;
-	int i;
+  set_t set = ALL_VALUES;
+  int i;
 
-	for (i = 0; i < ORDER; i++)
-		set &= ~SINGLETON(problem[i * DIM]);
+  for (i = 0; i < ORDER; i++)
+    set &= ~SINGLETON(problem[i * DIM]);
 
-	for (; i < DIM; i++) {
-		int v = pick_value(set);
+  for (; i < DIM; i++) {
+    int v = pick_value(set);
 
-		problem[i * DIM] = v;
-		set &= ~SINGLETON(v);
-	}
+    problem[i * DIM] = v;
+    set &= ~SINGLETON(v);
+  }
 }
 
 static int choose_rest(uint8_t *grid, const set_t *freedom)
 {
-	int i = search_least_free(grid, freedom);
-	set_t set;
+  int i = search_least_free(grid, freedom);
+  set_t set;
 
-	if (i < 0)
-		return 0;
+  if (i < 0)
+    return 0;
 
-	set = freedom[i];
-	while (set) {
-		set_t new_free[ELEMENTS];
-		int v = pick_value(set);
+  set = freedom[i];
+  while (set) {
+    set_t new_free[ELEMENTS];
+    int v = pick_value(set);
 
-		set &= ~SINGLETON(v);
-		grid[i] = v;
+    set &= ~SINGLETON(v);
+    grid[i] = v;
 
-		memcpy(new_free, freedom, sizeof(new_free));
-		freedom_eliminate(new_free, i % DIM, i / DIM, v);
+    memcpy(new_free, freedom, sizeof(new_free));
+    freedom_eliminate(new_free, i % DIM, i / DIM, v);
 
-		if (!choose_rest(grid, new_free))
-			return 0;
-	}
+    if (!choose_rest(grid, new_free))
+      return 0;
+  }
 
-	grid[i] = 0;
-	return -1;
+  grid[i] = 0;
+  return -1;
 }
 
 static void choose_grid(uint8_t *grid)
 {
-	set_t freedom[ELEMENTS];
+  set_t freedom[ELEMENTS];
 
-	memset(grid, 0, sizeof(grid[0]) * ELEMENTS);
+  memset(grid, 0, sizeof(grid[0]) * ELEMENTS);
 
-	choose_b1(grid);
+  choose_b1(grid);
 #if ORDER == 3
-	choose_b2(grid);
-	choose_b3(grid);
+  choose_b2(grid);
+  choose_b3(grid);
 #endif
-	choose_col1(grid);
+  choose_col1(grid);
 
-	init_freedom(grid, freedom);
-	choose_rest(grid, freedom);
+  init_freedom(grid, freedom);
+  choose_rest(grid, freedom);
 }
 
 /************************************************************************
@@ -820,45 +821,47 @@ static void choose_grid(uint8_t *grid)
  */
 
 static int harden_puzzle(const uint8_t *solution, uint8_t *puzzle,
-		         int max_iter, int max_score, int target_score)
+                         int max_iter, int max_score, int target_score)
 {
-	int best = 0;
-	int i;
+  int best = 0;
+  int i;
 
-	solve(puzzle, NULL, &best);
+  solve(puzzle, NULL, &best);
 
-	for (i = 0; i < max_iter; i++) {
-		uint8_t next[ELEMENTS];
-		int j;
+  for (i = 0; i < max_iter; i++) {
+    uint8_t next[ELEMENTS];
+    int j;
 
-		memcpy(next, puzzle, sizeof(next));
+    printf("\tIteration: %d   %d\n", i, best);
 
-		for (j = 0; j < DIM * 2; j++) {
-			int c = random() % ELEMENTS;
-			int s;
+    memcpy(next, puzzle, sizeof(next));
 
-			if (random() & 1) {
-				next[c] = solution[c];
-				next[ELEMENTS - c - 1] =
-					solution[ELEMENTS - c - 1];
-			} else {
-				next[c] = 0;
-				next[ELEMENTS - c - 1] = 0;
-			}
+    for (j = 0; j < DIM * 2; j++) {
+      int c = random() % ELEMENTS;
+      int s;
 
-			if (!solve(next, NULL, &s) &&
-			    s > best && (s <= max_score || max_score < 0)) {
-				memcpy(puzzle, next,
-					sizeof(puzzle[0]) * ELEMENTS);
-				best = s;
+      if (random() & 1) {
+        next[c] = solution[c];
+        next[ELEMENTS - c - 1] = solution[ELEMENTS - c - 1];
+      } else {
+        next[c] = 0;
+        next[ELEMENTS - c - 1] = 0;
+      }
 
-				if (target_score >= 0 && s >= target_score)
-					return best;
-			}
-		}
-	}
+      if (!solve(next, NULL, &s) &&
+          s > best && (s <= max_score || max_score < 0)) {
+        memcpy(puzzle, next, sizeof(puzzle[0]) * ELEMENTS);
+        best = s;
 
-	return best;
+        if (target_score >= 0 && s >= target_score) {
+          printf("iteration: %d\n", i);
+          return best;
+        }
+      }
+    }
+  }
+  printf("iteration: %d\n", max_iter);
+  return best;
 }
 
 /************************************************************************
@@ -867,218 +870,218 @@ static int harden_puzzle(const uint8_t *solution, uint8_t *puzzle,
 
 struct options {
   int               dump;
-  int				max_iter;
-  int				target_diff;
-  int				max_diff;
-  const struct gridline_def	*gl_def;
-  const char			*action;
+  int               max_iter;
+  int               target_diff;
+  int               max_diff;
+  const struct gridline_def *gl_def;
+  const char            *action;
 };
 
 static void usage(const char *progname)
 {
-	printf("usage: %s [options] <action>\n\n"
-"Options may be any of the following:\n"
-"    -i <iterations>    Maximum iterations for puzzle generation.\n"
-"    -m <score>         Maximum difficulty for puzzle generation.\n"
-"    -t <score>         Target difficulty for puzzle generation.\n"
-"    -u                 Use UTF-8 line-drawing characters.\n"
-"    -a                 Use ASCII line-drawing characters.\n"
-"    -d                 Dump generated puzzle to a file.\n"
-"\n"
-"Action should be one of:\n"
-"    solve              Read a grid from stdin and solve it.\n"
-"    examine            Read a grid and estimate the difficulty.\n"
-"    print              Read a grid and reformat it.\n"
-"    generate           Generate and print a new puzzle.\n"
-"    harden             Read an existing puzzle and make it harder.\n"
-"    gen-grid           Generate a valid grid.\n", progname);
+  printf("usage: %s [options] <action>\n\n"
+         "Options may be any of the following:\n"
+         "    -i <iterations>    Maximum iterations for puzzle generation.\n"
+         "    -m <score>         Maximum difficulty for puzzle generation.\n"
+         "    -t <score>         Target difficulty for puzzle generation.\n"
+         "    -u                 Use UTF-8 line-drawing characters.\n"
+         "    -a                 Use ASCII line-drawing characters.\n"
+         "    -d                 Dump generated puzzle to a file.\n"
+         "\n"
+         "Action should be one of:\n"
+         "    solve              Read a grid from stdin and solve it.\n"
+         "    examine            Read a grid and estimate the difficulty.\n"
+         "    print              Read a grid and reformat it.\n"
+         "    generate           Generate and print a new puzzle.\n"
+         "    harden             Read an existing puzzle and make it harder.\n"
+         "    gen-grid           Generate a valid grid.\n", progname);
 }
 
 static void version(void)
 {
-	printf(
-"Sudoku puzzle generator, 10 Jun 2011\n"
-"Copyright (C) 2011 Daniel Beer <dlbeer@gmail.com>\n"
-"\n"
-"Permission to use, copy, modify, and/or distribute this software for any\n"
-"purpose with or without fee is hereby granted, provided that the above\n"
-"copyright notice and this permission notice appear in all copies.\n"
-"\n"
-"THE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\n"
-"WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\n"
-"MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\n"
-"ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\n"
-"WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\n"
-"ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\n"
-"OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.\n");
+  printf(
+         "Sudoku puzzle generator, 10 Jun 2011\n"
+         "Copyright (C) 2011 Daniel Beer <dlbeer@gmail.com>\n"
+         "\n"
+         "Permission to use, copy, modify, and/or distribute this software for any\n"
+         "purpose with or without fee is hereby granted, provided that the above\n"
+         "copyright notice and this permission notice appear in all copies.\n"
+         "\n"
+         "THE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\n"
+         "WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\n"
+         "MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\n"
+         "ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\n"
+         "WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\n"
+         "ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\n"
+         "OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.\n");
 }
 
 static int parse_options(int argc, char **argv, struct options *o)
 {
-	const static struct option longopts[] = {
-		{"help",	0, 0, 'H'},
-		{"version",	0, 0, 'V'},
-		{NULL, 0, 0, 0}
-	};
-	int i;
+  const static struct option longopts[] = {
+                                           {"help", 0, 0, 'H'},
+                                           {"version",  0, 0, 'V'},
+                                           {NULL, 0, 0, 0}
+  };
+  int i;
 
-	memset(o, 0, sizeof(*o));
+  memset(o, 0, sizeof(*o));
 #if ORDER <= 3
-	o->max_iter = 200;
+  o->max_iter = 200;
 #else
-	o->max_iter = 20;
+  o->max_iter = 20;
 #endif
-	o->target_diff = -1;
-	o->max_diff = -1;
-    o->dump = 0;
+  o->target_diff = -1;
+  o->max_diff = -1;
+  o->dump = 0;
 
-	while ((i = getopt_long(argc, argv, "i:t:m:uad", longopts, NULL)) >= 0)
-		switch (i) {
-		case 'i':
-			o->max_iter = atoi(optarg);
-			break;
+  while ((i = getopt_long(argc, argv, "i:t:m:uad", longopts, NULL)) >= 0)
+    switch (i) {
+    case 'i':
+      o->max_iter = atoi(optarg);
+      break;
 
-		case 'd':
-			o->dump = 1;
-			break;
+    case 'd':
+      o->dump = 1;
+      break;
 
-		case 't':
-			o->target_diff = atoi(optarg);
-			break;
+    case 't':
+      o->target_diff = atoi(optarg);
+      break;
 
-		case 'm':
-			o->max_diff = atoi(optarg);
-			break;
+    case 'm':
+      o->max_diff = atoi(optarg);
+      break;
 
-		case 'u':
-			o->gl_def = &utf8_def;
-			break;
+    case 'u':
+      o->gl_def = &utf8_def;
+      break;
 
-		case 'a':
-			o->gl_def = &ascii_def;
-			break;
+    case 'a':
+      o->gl_def = &ascii_def;
+      break;
 
-		case 'H':
-			usage(argv[0]);
-			exit(0);
-			break;
+    case 'H':
+      usage(argv[0]);
+      exit(0);
+      break;
 
-		case 'V':
-			version();
-			exit(0);
+    case 'V':
+      version();
+      exit(0);
 
-		case '?':
-			fprintf(stderr, "Try --help for usage "
-				"information.\n");
-			return -1;
-		}
+    case '?':
+      fprintf(stderr, "Try --help for usage "
+              "information.\n");
+      return -1;
+    }
 
-	argc -= optind;
-	argv += optind;
+  argc -= optind;
+  argv += optind;
 
-	if (argc < 1) {
-		version();
-		printf("\n");
-		fprintf(stderr, "You need to specify an action. "
-			"Try --help.\n");
-		return -1;
-	}
+  if (argc < 1) {
+    version();
+    printf("\n");
+    fprintf(stderr, "You need to specify an action. "
+            "Try --help.\n");
+    return -1;
+  }
 
-	o->action = argv[0];
-	return 0;
+  o->action = argv[0];
+  return 0;
 }
 
 
 static void print_grid_opt(const struct options *o, const uint8_t *grid)
 {
-	if (o->gl_def)
-		print_grid_pretty(o->gl_def, grid);
-	else
-		print_grid(grid);
+  if (o->gl_def)
+    print_grid_pretty(o->gl_def, grid);
+  else
+    print_grid(grid);
 }
 
 static int action_se(const struct options *o)
 {
-	uint8_t grid[ELEMENTS];
-	uint8_t solution[ELEMENTS];
-	int diff;
-	int r;
+  uint8_t grid[ELEMENTS];
+  uint8_t solution[ELEMENTS];
+  int diff;
+  int r;
 
-	if (read_grid(grid) < 0)
-		return -1;
+  if (read_grid(grid) < 0)
+    return -1;
 
-	r = solve(grid, solution, &diff);
-	if (r < 0) {
-		printf("Grid is unsolvable\n");
-		return -1;
-	}
+  r = solve(grid, solution, &diff);
+  if (r < 0) {
+    printf("Grid is unsolvable\n");
+    return -1;
+  }
 
-	if (*o->action == 's' || *o->action == 'S') {
-		print_grid_opt(o, solution);
-		printf("\n");
-	}
+  if (*o->action == 's' || *o->action == 'S') {
+    print_grid_opt(o, solution);
+    printf("\n");
+  }
 
-	if (r > 0) {
-		printf("Solution is not unique\n");
-		return -1;
-	}
+  if (r > 0) {
+    printf("Solution is not unique\n");
+    return -1;
+  }
 
-	printf("Unique solution. Difficulty: %d\n", diff);
-	return 0;
+  printf("Unique solution. Difficulty: %d\n", diff);
+  return 0;
 }
 
 static int action_print(const struct options *o)
 {
-	uint8_t grid[ELEMENTS];
+  uint8_t grid[ELEMENTS];
 
-	if (read_grid(grid) < 0)
-		return -1;
+  if (read_grid(grid) < 0)
+    return -1;
 
-	print_grid_opt(o, grid);
-	return 0;
+  print_grid_opt(o, grid);
+  return 0;
 }
 
 static int action_gen_grid(const struct options *o)
 {
-	uint8_t grid[ELEMENTS];
+  uint8_t grid[ELEMENTS];
 
-	choose_grid(grid);
-	print_grid_opt(o, grid);
-	return 0;
+  choose_grid(grid);
+  print_grid_opt(o, grid);
+  return 0;
 }
 
 static int action_harden(const struct options *o)
 {
-	uint8_t solution[ELEMENTS];
-	uint8_t grid[ELEMENTS];
-	int r;
-	int old_diff;
-	int new_diff;
+  uint8_t solution[ELEMENTS];
+  uint8_t grid[ELEMENTS];
+  int r;
+  int old_diff;
+  int new_diff;
 
-	if (read_grid(grid) < 0)
-		return -1;
+  if (read_grid(grid) < 0)
+    return -1;
 
-	r = solve(grid, solution, &old_diff);
-	if (r < 0) {
-		printf("Grid is unsolvable\n");
-		return -1;
-	}
+  r = solve(grid, solution, &old_diff);
+  if (r < 0) {
+    printf("Grid is unsolvable\n");
+    return -1;
+  }
 
-	if (r)
-		memcpy(grid, solution, sizeof(grid[0]) * ELEMENTS);
+  if (r)
+    memcpy(grid, solution, sizeof(grid[0]) * ELEMENTS);
 
-	new_diff = harden_puzzle(solution, grid, o->max_iter,
-				 o->max_diff, o->target_diff);
+  new_diff = harden_puzzle(solution, grid, o->max_iter,
+                           o->max_diff, o->target_diff);
 
-	print_grid_opt(o, grid);
-	printf("\nDifficulty: %d\n", new_diff);
+  print_grid_opt(o, grid);
+  printf("\nDifficulty: %d\n", new_diff);
 
-	if (r)
-		printf("Original puzzle was not uniquely solvable\n");
-	else
-		printf("Original difficulty: %d\n", old_diff);
+  if (r)
+    printf("Original puzzle was not uniquely solvable\n");
+  else
+    printf("Original difficulty: %d\n", old_diff);
 
-	return 0;
+  return 0;
 }
 
 /*
@@ -1118,55 +1121,62 @@ static void dump_puzzle(const uint8_t *puzzle, int diff)
 
 static int action_generate(const struct options *o)
 {
-	uint8_t puzzle[ELEMENTS];
-	uint8_t grid[ELEMENTS];
-	int diff;
+  uint8_t puzzle[ELEMENTS];
+  uint8_t grid[ELEMENTS];
+  int i, diff, empty;
 
-	choose_grid(grid);
-	memcpy(puzzle, grid, ELEMENTS * sizeof(puzzle[0]));
+  choose_grid(grid);
+  memcpy(puzzle, grid, ELEMENTS * sizeof(puzzle[0]));
 
-	diff = harden_puzzle(grid, puzzle, o->max_iter, o->max_diff, o->target_diff);
-	print_grid_opt(o, puzzle);
-	printf("\nDifficulty: %d\n", diff);
+  diff = harden_puzzle(grid, puzzle, o->max_iter, o->max_diff, o->target_diff);
+  print_grid_opt(o, puzzle);
 
-    if (o->dump) {
-      dump_puzzle(puzzle, diff);
-    }
+  empty = 0;
+  for (i = 0; i < ELEMENTS; i++)
+    if (!puzzle[i])
+      empty++;
 
-	return 0;
+
+  printf("\nDifficulty: %d  empty: %d\n", diff, empty);
+
+  if (o->dump) {
+    dump_puzzle(puzzle, diff);
+  }
+
+  return 0;
 }
 
 struct action {
-	const char	*name;
-	int		(*func)(const struct options *o);
+  const char    *name;
+  int       (*func)(const struct options *o);
 };
 
 static const struct action actions[] = {
-	{"solve",	action_se},
-	{"examine",	action_se},
-	{"print",	action_print},
-	{"gen-grid",	action_gen_grid},
-	{"harden",	action_harden},
-	{"generate",	action_generate},
-	{NULL, NULL}
+                                        {"solve",   action_se},
+                                        {"examine", action_se},
+                                        {"print",   action_print},
+                                        {"gen-grid",    action_gen_grid},
+                                        {"harden",  action_harden},
+                                        {"generate",    action_generate},
+                                        {NULL, NULL}
 };
 
 int main(int argc, char **argv)
 {
-	struct options o;
-	const struct action *a = actions;
+  struct options o;
+  const struct action *a = actions;
 
-	if (parse_options(argc, argv, &o) < 0)
-		return -1;
+  if (parse_options(argc, argv, &o) < 0)
+    return -1;
 
-	while (a->name && strcasecmp(o.action, a->name))
-		a++;
+  while (a->name && strcasecmp(o.action, a->name))
+    a++;
 
-	if (!a->name) {
-		fprintf(stderr, "Unknown action: %s. Try --help.\n", o.action);
-		return -1;
-	}
+  if (!a->name) {
+    fprintf(stderr, "Unknown action: %s. Try --help.\n", o.action);
+    return -1;
+  }
 
-	srandom(time(NULL));
-	return a->func(&o);
+  srandom(time(NULL));
+  return a->func(&o);
 }

@@ -10,6 +10,10 @@ from .StringBuilder import StringBuilder
 
 int_t = Types.int_type()
 
+
+class SudokuError(Exception):
+    """An application specific error."""
+
 def parse_arguments():
     """
     Parses arguments of the form:
@@ -25,9 +29,6 @@ def parse_arguments():
     # Creates a dictionary of keys = argument flag, and value = argument
     args = vars(arg_parser.parse_args())
     return args['board']
-
-
-
 
 
 def make_grid():
@@ -61,10 +62,6 @@ def make_freedom_map():
             freedom[(row, col)] = set()
     return freedom
 
-class SudokuError(Exception):
-    """An application specific error."""
-
-
 class Freedom:
     """Represents simple freedom analysis of a puzzle.
 
@@ -81,50 +78,66 @@ class Freedom:
             for col in range(9):
                 self.freedom[(row, col)].clear()
 
-    def _constrain_row(self, row, col, val, erase=False):
+    def _constrain_row(self, row, col, val):
         for cx in range(9):
             if cx != col:
                 sx = self.freedom[(row, cx)]
-                if erase:
-                    sx.discard(val)
-                else:
-                    sx.add(val)
+                sx.add(val)
 
-    def _constrain_col(self, row, col, val, erase=False):
+    def _constrain_column(self, row, col, val):
         for rx in range(9):
             if rx != row:
                 sx = self.freedom[(rx, col)]
-                if erase:
-                    sx.discard(val)
-                else:
-                    sx.add(val)
+                sx.add(val)
 
-    def _constrain_subsquare(self, row, col, val, erase=False):
-        for rs, cs in Puzzle.subsquare(row, col):
+    def _constrain_block(self, row, col, val):
+        for rs, cs in Puzzle.block(row, col):
             if (rs, cs) != (row, col):
                 sx = self.freedom[(rs, cs)]
-                if erase:
-                    sx.discard(val)
-                else:
-                    sx.add(val)
+                sx.add(val)
 
-    def constrain_set_cell(self, row, col, val, oval):
+    def dump(self):
+        """prints out the freedom map for debugging."""
+        for row in range(9):
+            for col in range(9):
+                print(f'[{row}, {col}]: {self.freedom_set(row, col)}')
+
+    def constrain_set_cell(self, grid, row, col, val, oval): # pylint: disable=W0613
         """update the freedom map by adding the fact that cell (row, col) contents is being updated from oval to val."""
-        if oval is not None:
-            self.constrain_erase_cell(row, col, oval)
-        self._constrain_row(row, col, val)
-        self._constrain_col(row, col, val)
-        self._constrain_subsquare(row, col, val)
+        # incremental is hard (if the puzzle is already borked)
+        assert grid[row][col] == val  #make sure the grid has already been updated
+        #self._clear_map()
+        #self.constrain(grid)
+        self.update(grid, row, col, val, oval)
 
 
-    def constrain_erase_cell(self, row, col, oval):
+    def constrain_erase_cell(self, grid, row, col, oval): # pylint: disable=W0613
         """update the freedom map by removing the fact that cell (row, col) contains oval."""
-        self._constrain_row(row, col, oval, True)
-        self._constrain_col(row, col, oval, True)
-        self._constrain_subsquare(row, col, oval, True)
+        # incremental is hard (if the puzzle is already borked)
+        assert grid[row][col] is None  #make sure the grid has already been updated
+        #self._clear_map()
+        #self.constrain(grid)
+        self.update(grid, row, col, None, oval)
 
+    def update(self, grid, row, col, val, oval):
+        """update the freedom map (using Regions) by adding the fact that the cell (row, col) contents is being updated from oval to val."""
+        if oval is None and val is not None:
+            # the easy case, just need to add the new information
+            for cell in Regions.influence(row, col):
+                if cell != (row, col):
+                    self.freedom[cell].add(val)
+        else:
+            # just recompute the entire region of influence
+            for cell in Regions.influence(row, col):
+                self.freedom[cell] = Regions.forbidden_set(grid, cell[0], cell[1])
 
     def constrain(self, matrix):
+        """computes the set oriented freedom analysis."""
+        for row in range(9):
+            for col in range(9):
+                self.freedom[(row, col)] = Regions.forbidden_set(matrix, row, col)
+
+    def paleoconstrain(self, matrix):
         """computes the set oriented freedom analysis."""
         for row in range(9):
             for col in range(9):
@@ -133,15 +146,20 @@ class Freedom:
                     # val cannot be in any the cell in this row
                     self._constrain_row(row, col, val)
                     # val cannot be in any the cell in this column
-                    self._constrain_col(row, col, val)
-                    # val cannot be in any the cell in this subsquare
-                    self._constrain_subsquare(row, col, val)
+                    self._constrain_column(row, col, val)
+                    # val cannot be in any the cell in this block
+                    self._constrain_block(row, col, val)
+                    self._constrain_block(row, col, val)
 
+    def contains(self, row, col, val):
+        """returns true if the val is one of the possible (immediate) choices for the given cell."""
+        #remember we are storing the values it cannot take
+        return val not in self.freedom[(row, col)]
 
     def freedom_set(self, row, col):
         """returns the set of possible (immediate) choices for the given cell.
 
-        I.e. the complement of the set we store in the map for rthe given cell.
+        I.e. the complement of the set we store in the map for the given cell.
         """
         sx = self.freedom[(row, col)]
         return set(range(1, 10)).difference(sx)
@@ -167,6 +185,71 @@ class Freedom:
             for col in range(9):
                 copy.freedom[(row, col)].update(self.freedom[(row, col)])
         return copy
+
+
+class Regions:
+    """see if caching can speed things up a bit."""
+
+    _block_map = {}
+
+    _row_map = {}
+
+    _column_map = {}
+
+    _influence_map = {}
+
+    @staticmethod
+    def block(orow, ocol):
+        """returns a list of cells that make up the block the cell belongs to."""
+        if 0 <= orow <= 8 and 0 <= ocol <= 8:
+            row = 3 * (orow // 3)
+            col = 3 * (ocol // 3)
+            if (row, col) in Regions._block_map:
+                return Regions._block_map[(row, col)]
+            retval = frozenset({(r, c) for r in range(row, row + 3) for c in range(col, col + 3)})
+            Regions._block_map[(row, col)] = retval
+            return retval
+        raise SudokuError(f'block error: {orow} {ocol}')
+
+    @staticmethod
+    def row(rw):
+        """returns the (cached) row at the given index."""
+        if 0 <= rw <= 8:
+            if rw in Regions._row_map:
+                return Regions._row_map[rw]
+            retval = frozenset({(rw, c) for c in range(9)})
+            Regions._row_map[rw] = retval
+            return retval
+        raise SudokuError(f'row error: {rw}')
+
+    @staticmethod
+    def column(cl):
+        """returns the (cached) column at the given index."""
+        if 0 <= cl <= 8:
+            if cl in Regions._column_map:
+                return Regions._column_map[cl]
+            retval = frozenset({(r, cl) for r in range(9)})
+            Regions._column_map[cl] = retval
+            return retval
+        raise SudokuError(f'column error: {cl}')
+
+    @staticmethod
+    def influence(row, col):
+        """returns the (cached) frozen set of cells influenced by the given cell."""
+        if 0 <= row <= 8 and  0 <= col <= 8:
+            if (row, col) in Regions._influence_map:
+                return Regions._influence_map[(row, col)]
+            retval = frozenset(Regions.block(row, col).union(Regions.row(row), Regions.column(col)))
+            Regions._influence_map[(row, col)] = retval
+            return retval
+        raise SudokuError(f'influence error: {row} {col}')
+
+
+    @staticmethod
+    def forbidden_set(grid, row, col):
+        """returns the set of values that the given cell CANNOT contain in the given grid."""
+        influence = Regions.influence(row, col)
+        return {grid[cell[0]][cell[1]] for cell in influence if grid[cell[0]][cell[1]] is not None and cell != (row, col)}
 
 
 class Puzzle:
@@ -202,14 +285,19 @@ class Puzzle:
             return Puzzle(matrix)
 
     @staticmethod
-    def subsquare(orow, ocol):
-        """returns a list of cells that make up the subsquare the cell belongs to."""
+    def block(orow, ocol):
+        """returns a list of cells that make up the block the cell belongs to."""
+        return Regions.block(orow, ocol)
+
+    @staticmethod
+    def _block(orow, ocol):
+        """returns a list of cells that make up the block the cell belongs to."""
         if 0 <= orow <= 8 and 0 <= ocol <= 8:
             row = 3 * (orow // 3)
             col = 3 * (ocol // 3)
-
             return [(r, c) for r in range(row, row + 3) for c in range(col, col + 3)]
-        raise SudokuError(f'subsquare error: {orow} {ocol}')
+        raise SudokuError(f'block error: {orow} {ocol}')
+
 
 
     def __init__(self, matrix=None):
@@ -238,6 +326,16 @@ class Puzzle:
                         return False
         return True
 
+    def sanity_check(self):
+        """a quick sanity check to make sure the puzzle is not obviously unsolvable."""
+        for row in range(9):
+            for col in range(9):
+                val = self.grid[row][col]
+                if val is not None:
+                    if not self.freedom.contains(row, col, val):
+                        print(f'Insane: [{row}, {col}]: {val}')
+                        return False
+        return True
 
     def get_row(self, row):
         """get_row returns a copy of the given row."""
@@ -258,7 +356,7 @@ class Puzzle:
             if val is not None:
                 self.empty_cells += 1
                 self.grid[i][j] = None
-                self.freedom.constrain_erase_cell(i, j, val)
+                self.freedom.constrain_erase_cell(self.grid, i, j, val)
             return None
         raise SudokuError(f'erase_cell error: {i} {j}')
 
@@ -270,7 +368,7 @@ class Puzzle:
                 if oval is None and val is not None:
                     self.empty_cells -= 1
                 self.grid[i][j] = val
-                self.freedom.constrain_set_cell(i, j, val, oval)
+                self.freedom.constrain_set_cell(self.grid, i, j, val, oval)
             return None
         raise SudokuError(f'set_cell error: {i} {j} {val}')
 
@@ -299,6 +397,10 @@ class Puzzle:
     def freedom_set(self, row, col):
         """return the freedom set of the given cell."""
         return self.freedom.freedom_set(row, col)
+
+    def least_free(self):
+        """returns the least free cell in the puzzle."""
+        return self.freedom.least_free(self.grid)
 
 
 class Syntax:
@@ -336,7 +438,7 @@ class Syntax:
 
 
     def make_duplicate_rules(self):
-        """make_duplicate_rules create the list of rules asserting that each row, column and subsquare cannot containn duplicates."""
+        """make_duplicate_rules create the list of rules asserting that each row, column and block cannot containn duplicates."""
         rules = []
         # All elements in a row must be distinct
         for i in range(9):
@@ -349,14 +451,14 @@ class Syntax:
             self.explanation[rule] = f'Column {i + 1} cannot contain duplicates'
             rules.append(rule)
         # All elements in each 3x3 square must be distinct
-        def subsquare(row, column):
+        def block(row, column):
             rname = {0: 'Top', 1: 'Middle', 2: 'Bottom'}
             cname = {0: 'left', 1: 'center', 2: 'right'}
             return f'{rname[row]}-{cname[column]}'
         for row in range(3):
             for column in range(3):
                 rule = Terms.distinct([self.var(i + 3 * row, j + 3 * column) for i in range(3) for j in range(3)])
-                self.explanation[rule] = f'{subsquare(row,column)} subsquare cannot contain duplicates'
+                self.explanation[rule] = f'{block(row,column)} block cannot contain duplicates'
                 rules.append(rule)
         return rules
 

@@ -25,7 +25,7 @@ class SudokuSolver:
         self.numerals = self.syntax.constants
         # each slot can only contain 1 through 9
         self.trivial_rules = self.syntax.trivial_rules
-        # each row, column, and subsquare can not contain duplicates
+        # each row, column, and block can not contain duplicates
         self.duplicate_rules = self.syntax.duplicate_rules
         # the union of the trivial rules and the duplicate rules
         self.all_rules = self.syntax.all_rules
@@ -48,7 +48,7 @@ class SudokuSolver:
         ctx.assert_formulas(self.trivial_rules)
 
     def assert_duplicate_rules(self, ctx):
-        """asserts that each row, column and subsquare must not contain duplicates."""
+        """asserts that each row, column and block must not contain duplicates."""
         ctx.assert_formulas(self.duplicate_rules)
 
     def _equality(self, i, j, val):

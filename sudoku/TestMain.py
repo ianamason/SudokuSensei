@@ -7,7 +7,17 @@ import pkg_resources as pkg
 from .SudokuLib import parse_arguments, Puzzle
 from .SudokuGame import SudokuGame
 from .SudokuSolver import SudokuSolver
-from .SudokuGenerator import solve, choose_solution
+from .SudokuGenerator import SudokuGenerator, solve, choose_solution
+
+
+def test0():
+    """Quick test of the solution generation code."""
+    puzzle = Puzzle()
+    choose_solution(puzzle)
+    if not puzzle.sanity_check():
+        puzzle.freedom.dump()
+    puzzle.pprint()
+    print(f'Sanity: {puzzle.sanity_check()} #empty_cells = {puzzle.empty_cells}')
 
 def main():
     """main is the pip entry point."""
@@ -15,10 +25,13 @@ def main():
     board_name = parse_arguments()
 
     if board_name is None:
-        puzzle = Puzzle()
-        choose_solution(puzzle)
-        puzzle.pprint()
-        print(f'#empty_cells = {puzzle.empty_cells}')
+        if False: # pylint: disable=W0125
+            test0()
+            return
+        generator = SudokuGenerator()
+        score = generator.generate()
+        generator.puzzle.pprint()
+        print(f'Difficulty: {score} Empty: {generator.puzzle.empty_cells}')
         return
 
     board_file = pkg.resource_filename('sudoku', f'data/{board_name}.sudoku')
@@ -35,6 +48,8 @@ def main():
 
     game.puzzle.pprint()
 
+    print(f'Sanity check: {game.puzzle.sanity_check()}')
+
     diff = [0]
 
     smt_solution = SudokuSolver(game).solve()
@@ -49,6 +64,6 @@ def main():
     solution.pprint()
 
     print(f'Difficulty: {diff[0]}')
-    print(f'#empty_cells = {game.puzzle.empty_cells}')
+    print(f'#clues = {81 - game.puzzle.empty_cells}')
 
     print(solution.agree(smt_solution))

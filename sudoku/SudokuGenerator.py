@@ -2,12 +2,44 @@
 
 import random
 
+from .SudokuLib import SudokuError, Puzzle
+
+
+_ELEMENTS = tuple(range(81))
+
+_CELLS = tuple([(row, col) for row in range(9) for col in range(9)])
+
+_BOOLS = (True, False)
+
+def flip():
+    """randomly chooses between True and False."""
+    return random.choice(_BOOLS)
+
+def random_cell():
+    """randomly chooses a cell,"""
+    return random.choice(_CELLS)
+
+def random_index():
+    """randomly chooses an index into the _CELLS tuple."""
+    return random.choice(_ELEMENTS)
+
+def index2cell(index):
+    """get the cell corresponding to the given index."""
+    if 0 <= index < 81:
+        return _CELLS[index]
+    raise SudokuError(f'index2cell error: {index}')
+
+
+def pick_one(choices):
+    """randomly chooses an element of the given set."""
+    return random.choice(tuple(choices))
+
 def _choose_b1(puzzle):
-    """randomly fills the upper-left subsquare with unique values from range(1, 10)."""
+    """randomly fills the upper-left block with unique values from range(1, 10)."""
     choices = set(range(1, 10))
     for row in range(3):
         for col in range(3):
-            val = random.choice(tuple(choices))
+            val = pick_one(choices)
             choices.remove(val)
             puzzle.set_cell(row, col, val)
 
@@ -17,14 +49,15 @@ def _clear_b2(puzzle):
             puzzle.erase_cell(row, col)
 
 def _choose_b2(puzzle):
-    """randomly fills the upper-center subsquare with legal unique values from range(1, 10)."""
+    """randomly fills the upper-center block with legal unique values from range(1, 10)."""
     for row in range(3):
         for col in range(3, 6):
             choices = puzzle.freedom_set(row, col)
+            #print(f'[{row}, {col}]: {choices}')
             if len(choices) == 0:
                 _clear_b2(puzzle)
                 return False
-            val = random.choice(tuple(choices))
+            val = pick_one(choices)
             puzzle.set_cell(row, col, val)
     return True
 
@@ -34,22 +67,23 @@ def _clear_b3(puzzle):
             puzzle.erase_cell(row, col)
 
 def _choose_b3(puzzle):
-    """randomly fills the upper-right subsquare with legal unique values from range(1, 10)."""
+    """randomly fills the upper-right block with legal unique values from range(1, 10)."""
     for row in range(3):
         for col in range(6, 9):
             choices = puzzle.freedom_set(row, col)
             if len(choices) == 0:
                 _clear_b3(puzzle)
                 return False
-            val = random.choice(tuple(choices))
+            val = pick_one(choices)
             puzzle.set_cell(row, col, val)
     return True
 
 def _choose_c1(puzzle):
+    """randomly fills in the rest of the first column."""
     col = 0
-    for row in range(9):
+    for row in range(3, 9):
         choices = puzzle.freedom_set(row, col)
-        val = random.choice(tuple(choices))
+        val = pick_one(choices)
         puzzle.set_cell(row, col, val)
 
 
@@ -62,7 +96,7 @@ def _choose_rest(puzzle):
     choices = puzzle.freedom.freedom_set(*least_free_cell)
 
     while len(choices) > 0:
-        val = random.choice(tuple(choices))
+        val = pick_one(choices)
         choices.remove(val)
         puzzle.set_cell(row, col, val)
 
@@ -82,7 +116,11 @@ def choose_solution(puzzle):
         if _choose_b3(puzzle):
             break
     _choose_c1(puzzle)
-    _choose_rest(puzzle)
+    while True:
+        if _choose_rest(puzzle):
+            break
+#    if not puzzle.sanity_check():
+#        raise SudokuError('choose_solution: failed sanity check.')
 
 
 
@@ -99,21 +137,16 @@ def solve(problem, solution, diff):
     """python equivalent to David Beer's solve function."""
     ctx = SolveContext(problem, solution)
 
+    if not problem.sanity_check():
+        return -1
+
     solve_recurse(ctx, problem.freedom, 0)
 
     # calculate a difficulty score
     if diff is not None:
-        empty = problem.empty_cells
-        # why not just have a puzzle maintain it's own empty count?
-        #for row in range(9):
-        #    for col in range(9):
-        #        if problem.get_cell(row, col) is None:
-        #            empty += 1
-        #assert empty == problem.empty_cells
+        diff[0] = (ctx.branch_score * 100) + problem.empty_cells
 
-        diff[0] = (ctx.branch_score * 100) + empty
-
-
+    print(f'solver returns {ctx.count - 1}  diff {diff[0]} empty {problem.empty_cells}')
     return ctx.count - 1
 
 
@@ -125,22 +158,79 @@ def solve_recurse(ctx, freedom, diff):
     if least_free_cell is None:
         if ctx.count == 0:
             ctx.branch_score = diff
-            ctx.solution.copy(ctx.problem)
-            ctx.count += 1
+            if ctx.solution is not None:
+                ctx.solution.copy(ctx.problem)
+        ctx.count += 1
         return
 
     row, col = least_free_cell
 
     free = freedom.freedom_set(row, col)
+
     bf = len(free) - 1
     diff += bf * bf
 
     for val in free:
-        new_freedom = freedom.clone()  #FIXME: I don't think cloning is necessary
-        new_freedom.constrain_set_cell(row, col, val, None)
+        new_freedom = freedom.clone()
         ctx.problem.set_cell(row, col, val)
+        new_freedom.constrain_set_cell(ctx.problem.grid, row, col, val, None)
         solve_recurse(ctx, new_freedom, diff)
         if ctx.count >= 2:
             return
-
     ctx.problem.erase_cell(row, col)
+
+
+class SudokuGenerator:
+    """The puzzle generation algorithm of Daniel Beer."""
+    MAX_ITER = 200
+    TGT_DIFF = 450
+    MAX_DIFF = -1
+
+    def __init__(self):
+        self.puzzle = Puzzle()
+        choose_solution(self.puzzle)
+        self.solution = self.puzzle.clone()
+        self.puzzle.pprint()
+
+    def generate(self):
+        """generate a puzzle, a version of Daniel Beer's harden_puzzle."""
+        best = [0]
+        code = solve(self.puzzle, None, best)
+
+        if code != 0:
+            print("Bug")
+            return None
+
+        for i in range(SudokuGenerator.MAX_ITER):
+
+            print(f'\tIteration: {i} {best[0]}')
+
+            next_puzzle = self.puzzle.clone()
+
+            for j in range(18):
+                sx = [0]
+                cx = random_index()
+                r1, c1 = index2cell(cx)
+                r2, c2 = index2cell(81 - cx - 1)
+
+                if flip():
+                    next_puzzle.set_cell(r1, c1, self.solution.get_cell(r1, c1))
+                    next_puzzle.set_cell(r2, c2, self.solution.get_cell(r2, c2))
+                else:
+                    next_puzzle.erase_cell(r1, c1)
+                    next_puzzle.erase_cell(r2, c2)
+
+                code = solve(next_puzzle, None, sx)
+
+                if code == 0:
+                    if sx[0] > best[0]:
+                        self.puzzle.copy(next_puzzle)
+                    best[0] = sx[0]
+
+                    if sx[0] >= SudokuGenerator.TGT_DIFF:
+                        print(f'Iteration {i} {j}')
+                        return best[0]
+
+
+        print(f'Iteration {SudokuGenerator.MAX_ITER}')
+        return best[0]
