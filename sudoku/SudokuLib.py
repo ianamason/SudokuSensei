@@ -72,51 +72,23 @@ class Freedom:
     def __init__(self):
         self.freedom = make_freedom_map()
 
-    def _clear_map(self):
-        """resets the map"""
-        for row in range(9):
-            for col in range(9):
-                self.freedom[(row, col)].clear()
-
-    def _constrain_row(self, row, col, val):
-        for cx in range(9):
-            if cx != col:
-                sx = self.freedom[(row, cx)]
-                sx.add(val)
-
-    def _constrain_column(self, row, col, val):
-        for rx in range(9):
-            if rx != row:
-                sx = self.freedom[(rx, col)]
-                sx.add(val)
-
-    def _constrain_block(self, row, col, val):
-        for rs, cs in Puzzle.block(row, col):
-            if (rs, cs) != (row, col):
-                sx = self.freedom[(rs, cs)]
-                sx.add(val)
-
     def dump(self):
         """prints out the freedom map for debugging."""
         for row in range(9):
             for col in range(9):
                 print(f'[{row}, {col}]: {self.freedom_set(row, col)}')
 
-    def constrain_set_cell(self, grid, row, col, val, oval): # pylint: disable=W0613
+    def constrain_set_cell(self, grid, row, col, val, oval):
         """update the freedom map by adding the fact that cell (row, col) contents is being updated from oval to val."""
         # incremental is hard (if the puzzle is already borked)
         assert grid[row][col] == val  #make sure the grid has already been updated
-        #self._clear_map()
-        #self.constrain(grid)
         self.update(grid, row, col, val, oval)
 
 
-    def constrain_erase_cell(self, grid, row, col, oval): # pylint: disable=W0613
+    def constrain_erase_cell(self, grid, row, col, oval):
         """update the freedom map by removing the fact that cell (row, col) contains oval."""
         # incremental is hard (if the puzzle is already borked)
         assert grid[row][col] is None  #make sure the grid has already been updated
-        #self._clear_map()
-        #self.constrain(grid)
         self.update(grid, row, col, None, oval)
 
     def update(self, grid, row, col, val, oval):
@@ -136,20 +108,6 @@ class Freedom:
         for row in range(9):
             for col in range(9):
                 self.freedom[(row, col)] = Regions.forbidden_set(matrix, row, col)
-
-    def paleoconstrain(self, matrix):
-        """computes the set oriented freedom analysis."""
-        for row in range(9):
-            for col in range(9):
-                val = matrix[row][col]
-                if val is not None:
-                    # val cannot be in any the cell in this row
-                    self._constrain_row(row, col, val)
-                    # val cannot be in any the cell in this column
-                    self._constrain_column(row, col, val)
-                    # val cannot be in any the cell in this block
-                    self._constrain_block(row, col, val)
-                    self._constrain_block(row, col, val)
 
     def contains(self, row, col, val):
         """returns true if the val is one of the possible (immediate) choices for the given cell."""
