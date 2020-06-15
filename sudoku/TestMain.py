@@ -31,7 +31,7 @@ def main():
         generator = SudokuGenerator()
         score = generator.generate()
         generator.puzzle.pprint()
-        print(f'Difficulty: {score} Empty: {generator.puzzle.empty_cells}')
+        print(f'Difficulty: {score} Target: {SudokuGenerator.TGT_DIFF} Empty: {generator.puzzle.empty_cells} ')
         return
 
     board_file = pkg.resource_filename('sudoku', f'data/{board_name}.sudoku')

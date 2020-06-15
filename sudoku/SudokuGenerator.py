@@ -140,7 +140,8 @@ def solve(problem, solution, diff):
     if not problem.sanity_check():
         return -1
 
-    solve_recurse(ctx, problem.freedom, 0)
+    #solve_recurse(ctx, problem.freedom, 0)
+    solve_recurse(ctx, 0)
 
     # calculate a difficulty score
     if diff is not None:
@@ -150,10 +151,11 @@ def solve(problem, solution, diff):
     return ctx.count - 1
 
 
-def solve_recurse(ctx, freedom, diff):
+#def solve_recurse(ctx, freedom, diff):
+def solve_recurse(ctx, diff):
     """python equivalent to David Beer's solve_recurse function."""
 
-    least_free_cell = freedom.least_free(ctx.problem.grid)
+    least_free_cell = ctx.problem.least_free()
 
     if least_free_cell is None:
         if ctx.count == 0:
@@ -165,16 +167,17 @@ def solve_recurse(ctx, freedom, diff):
 
     row, col = least_free_cell
 
-    free = freedom.freedom_set(row, col)
+    free = ctx.problem.freedom.freedom_set(row, col)
 
     bf = len(free) - 1
     diff += bf * bf
 
     for val in free:
-        new_freedom = freedom.clone()
+        #new_freedom = freedom.clone()
         ctx.problem.set_cell(row, col, val)
-        new_freedom.constrain_set_cell(ctx.problem.grid, row, col, val, None)
-        solve_recurse(ctx, new_freedom, diff)
+        #new_freedom.constrain_set_cell(ctx.problem.grid, row, col, val, None)
+        #solve_recurse(ctx, new_freedom, diff)
+        solve_recurse(ctx, diff)
         if ctx.count >= 2:
             return
     ctx.problem.erase_cell(row, col)

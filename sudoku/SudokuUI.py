@@ -34,13 +34,18 @@ class SudokuUI(Frame): # pylint: disable=R0901
         self.canvas = Canvas(self, width=WIDTH, height=HEIGHT)
         self.canvas.pack(fill=BOTH, side=TOP)
 
+        new_puzzle_button = Button(self,
+                                   text='New',
+                                   command=self.__new_puzzle)
+        new_puzzle_button.pack(side=LEFT, padx=PAD)
+
         clear_puzzle_button = Button(self,
-                                     text='Clear Puzzle',
+                                     text='Clear P',  #'Clear Puzzle', till we get some drop downs...
                                      command=self.__clear_puzzle)
         clear_puzzle_button.pack(side=LEFT, padx=PAD)
 
         clear_solution_button = Button(self,
-                                       text='Clear Solution',
+                                       text='Clear S',  #'Clear Solution', till we get some drop downs...
                                        command=self.__clear_solution)
         clear_solution_button.pack(side=LEFT, padx=PAD)
 
@@ -183,6 +188,11 @@ class SudokuUI(Frame): # pylint: disable=R0901
     def __clear_messages(self):
         for tag in ['victory', 'failure', 'count']:
             self.canvas.delete(tag)
+
+    def __new_puzzle(self):
+        self.game.new()
+        self.__clear_messages()
+        self.__draw_puzzle()
 
     def __clear_puzzle(self):
         self.game.start()

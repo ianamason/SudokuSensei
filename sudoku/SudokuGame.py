@@ -13,7 +13,7 @@
 
 from .SudokuLib import Puzzle
 from .SudokuSolver import SudokuSolver
-
+from .SudokuGenerator import SudokuGenerator
 
 class SudokuGame:
     """
@@ -35,6 +35,15 @@ class SudokuGame:
         self.game_over = False
         self.puzzle = self.start_puzzle.clone()
         self.solution = None
+
+    def new(self):
+        """start commences a newly generated game."""
+        generator = SudokuGenerator()
+        score = generator.generate()
+        generator.puzzle.pprint()
+        print(f'Difficulty: {score} Target: {SudokuGenerator.TGT_DIFF} Empty: {generator.puzzle.empty_cells} ')
+        self.start_puzzle = generator.puzzle.clone()
+        self.start()
 
     def solve(self):
         """solve uses the SMT solver to solve the current game."""
