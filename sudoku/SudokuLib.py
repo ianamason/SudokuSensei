@@ -62,6 +62,14 @@ def make_freedom_map():
             freedom[(row, col)] = set()
     return freedom
 
+def make_sofa_map():
+    """constructs an initially empty sofa map."""
+    sofa = {}
+    for val in range(1, 10):
+        # the set represents the cells that CANNOT contain the 'val'
+        sofa[val] = set()
+    return sofa
+
 class Freedom:
     """Represents simple freedom analysis of a puzzle.
 
@@ -71,6 +79,7 @@ class Freedom:
 
     def __init__(self):
         self.freedom = make_freedom_map()
+        self.sofa_map = make_sofa_map()
 
     def dump(self):
         """prints out the freedom map for debugging."""

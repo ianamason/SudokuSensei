@@ -11,6 +11,9 @@
 # All changes are recorded in the git commits.
 #
 
+#
+TITLE = 'SudokuSensei'
+
 # Pixels around the board
 MARGIN = 20
 

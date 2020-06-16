@@ -11,58 +11,48 @@
 # All changes are recorded in the git commits.
 #
 
-from tkinter import Canvas, Frame, Button, BOTH, TOP, LEFT, messagebox
+import tkinter as tk
 
-from .Constants import WIDTH, HEIGHT, MARGIN, SIDE, PAD, ALEPH_NOUGHT
+from tkinter import messagebox
 
-class SudokuUI(Frame): # pylint: disable=R0901
-    """
-    The Tkinter UI, responsible for drawing the board and accepting user input.
-    """
+from .Constants import TITLE, WIDTH, HEIGHT, MARGIN, SIDE, ALEPH_NOUGHT
+
+class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
+    """The Tkinter UI, responsible for drawing the board and accepting user input."""
+
+    font = ('Arial', 32)
+
     def __init__(self, parent, game):
+        tk.Frame.__init__(self, parent)
         self.game = game
-        Frame.__init__(self, parent)
         self.parent = parent
-
         self.row, self.col = -1, -1
 
-        self.__init_ui()
+        self.__init_ui(parent)
 
-    def __init_ui(self):
-        self.parent.title('Sudoku Sensei')
-        self.pack(fill=BOTH)
-        self.canvas = Canvas(self, width=WIDTH, height=HEIGHT)
-        self.canvas.pack(fill=BOTH, side=TOP)
 
-        new_puzzle_button = Button(self,
-                                   text='New',
-                                   command=self.__new_puzzle)
-        new_puzzle_button.pack(side=LEFT, padx=PAD)
+    def __init_ui(self, parent):
+        parent.title(TITLE)
 
-        clear_puzzle_button = Button(self,
-                                     text='Clear P',  #'Clear Puzzle', till we get some drop downs...
-                                     command=self.__clear_puzzle)
-        clear_puzzle_button.pack(side=LEFT, padx=PAD)
+        # split the UI into a canvas and a control panel
+        self.controls = tk.Frame(parent, width=WIDTH)
+        self.canvas = tk.Canvas(parent, width=WIDTH, height=HEIGHT)
 
-        clear_solution_button = Button(self,
-                                       text='Clear S',  #'Clear Solution', till we get some drop downs...
-                                       command=self.__clear_solution)
-        clear_solution_button.pack(side=LEFT, padx=PAD)
+        self.controls.pack(side="bottom", fill="both", expand=True)
+        self.canvas.pack(side="top", fill="both", expand=True)
 
-        solve_button = Button(self,
-                              text='Solve',
-                              command=self.__solve_puzzle)
-        solve_button.pack(side=LEFT, padx=PAD)
 
-        count_button = Button(self,
-                              text='#Solutions',
-                              command=self.__count_solutions)
-        count_button.pack(side=LEFT, padx=PAD)
+        self.clear_var = tk.StringVar(parent)
+        self.clear_choices = ['', 'Puzzle', 'Solution']
+        self.clear_var.set('')
+        self.clear_var.trace(callback=self.__dispatch_clear_choice, mode='w')
 
-        hint_button = Button(self,
-                             text='Hint',
-                             command=self.__display_hint)
-        hint_button.pack(side=LEFT, padx=PAD)
+        self.show_var = tk.StringVar(parent)
+        self.show_choices = ['', 'Hint', '# Solutions', 'Freedom', 'Difficulty', 'Sofa', ]
+        self.show_var.set('')
+        self.show_var.trace(callback=self.__dispatch_show_choice, mode='w')
+
+        self._create_controls(self.controls)
 
         self.__draw_grid()
         self.__draw_puzzle()
@@ -70,10 +60,63 @@ class SudokuUI(Frame): # pylint: disable=R0901
         self.canvas.bind('<Button-1>', self.__cell_clicked)
         self.canvas.bind('<Key>', self.__key_pressed)
 
+
+
+    def _create_controls(self, parent):
+
+
+        clear_label = tk.Label(parent, text="Clear ...")
+        show_label = tk.Label(parent, text="Show ...")
+
+        clear_choice = tk.OptionMenu(parent, self.clear_var, *self.clear_choices)
+        clear_choice.config(width=10)
+
+        show_choice = tk.OptionMenu(parent, self.show_var, *self.show_choices)
+        show_choice.config(width=10)
+
+        check_button = tk.Button(parent, text="Check", command=self.__check_puzzle)
+        new_button = tk.Button(parent, text="New Game", command=self.__new_puzzle)
+        solve_button = tk.Button(parent, text="Solve", command=self.__solve_puzzle)
+
+        clear_label.grid(row=0, column=1, sticky="we")
+        show_label.grid(row=0, column=2, sticky="we")
+
+        clear_choice.grid(row=1, column=1, sticky="we")
+        show_choice.grid(row=1, column=2, sticky="we")
+        check_button.grid(row=1, column=3, sticky="we")
+        new_button.grid(row=1, column=4, sticky="we")
+        solve_button.grid(row=1, column=5, sticky="we")
+
+
+    def __dispatch_show_choice(self, *args): # pylint: disable=W0613
+        desire = self.show_var.get()
+        if desire == 'Hint':
+            self.__show_hint()
+        elif desire == '# Solutions':
+            self.__show_solution_count()
+        elif desire == 'Freedom':
+            self.__show_freedom()
+        elif desire == 'Difficulty':
+            self.__show_difficulty()
+        elif desire == 'Sofa':
+            self.__show_sofa()
+        else:
+            print('Huh?')
+
+
+
+    def __dispatch_clear_choice(self, *args): # pylint: disable=W0613
+        desire = self.clear_var.get()
+        if desire == 'Puzzle':
+            self.__clear_puzzle()
+        elif desire == 'Solution':
+            self.__clear_solution()
+        else:
+            print('Huh?')
+
+
     def __draw_grid(self):
-        """
-        Draws grid divided with blue lines into 3x3 squares
-        """
+        """Draws grid divided with blue lines into 3x3 squares."""
         for i in range(10):
             color = 'blue' if i % 3 == 0 else 'gray'
 
@@ -89,6 +132,7 @@ class SudokuUI(Frame): # pylint: disable=R0901
             y1 = MARGIN + i * SIDE
             self.canvas.create_line(x0, y0, x1, y1, fill=color)
 
+
     def __draw_puzzle(self):
         self.canvas.delete('numbers')
         for i in range(9):
@@ -99,17 +143,13 @@ class SudokuUI(Frame): # pylint: disable=R0901
                     y = MARGIN + i * SIDE + SIDE / 2
                     original = self.game.start_puzzle.get_cell(i, j)
                     color = 'black' if answer == original else 'sea green'
-                    self.canvas.create_text(
-                        x, y, text=answer, tags='numbers', fill=color
-                    )
+                    self.canvas.create_text(x, y, text=answer, tags='numbers', fill=color, font=SudokuUI.font)
                 elif self.game.solution is not None:
                     solution = self.game.solution.get_cell(i, j)
                     if solution is not None:
                         x = MARGIN + j * SIDE + SIDE / 2
                         y = MARGIN + i * SIDE + SIDE / 2
-                        self.canvas.create_text(
-                            x, y, text=solution, tags='numbers', fill='purple'
-                        )
+                        self.canvas.create_text(x, y, text=solution, tags='numbers', fill='purple', font=SudokuUI.font)
 
 
     def __draw_cursor(self):
@@ -135,18 +175,13 @@ class SudokuUI(Frame): # pylint: disable=R0901
         )
         # create text
         x = y = MARGIN + 4 * SIDE + SIDE / 2
-        self.canvas.create_text(
-            x, y,
-            text=textstr, tags=tag,
-            fill='white', font=('Arial', 32)
-        )
-
+        self.canvas.create_text(x, y, text=textstr, tags=tag, fill='white', font=SudokuUI.font)
 
     def __draw_victory(self):
         self.__draw_message('victory', 'You win!', 'dark orange', 'orange')
 
     def __draw_no_solution(self): # pylint: disable=R0201
-        messagebox.showinfo('Bummer', 'No Solution!')
+        tk.messagebox.showinfo('Bummer', 'No Solution!')
 
     def __cell_clicked(self, event):
         if self.game.game_over:
@@ -195,6 +230,7 @@ class SudokuUI(Frame): # pylint: disable=R0901
         self.__draw_puzzle()
 
     def __clear_puzzle(self):
+        print('clearing')
         self.game.start()
         self.__clear_messages()
         self.__draw_puzzle()
@@ -209,21 +245,34 @@ class SudokuUI(Frame): # pylint: disable=R0901
             self.__draw_no_solution()
         self.__draw_puzzle()
 
-    def __count_solutions(self):
+    def __show_solution_count(self):
         self.__draw_solution_count()
         self.__draw_puzzle()
 
-    def __display_hint(self):
+    def __show_hint(self):
         success, hint = self.game.get_hint()
         if success is None:
-            messagebox.showinfo('Sorry', hint)
+            tk.messagebox.showinfo('Sorry', hint)
             return
         (i, j, val, count) = success
         self.row = i
         self.col = j
         self.__draw_cursor()
         print(f'The cell [{i}, {j}] should contain {val}')
-        messagebox.showinfo(f'A Hint: {count} rules are needed', hint)
+        tk.messagebox.showinfo(f'A Hint: {count} rules are needed', hint)
+
+    def __show_freedom(self): # pylint: disable=R0201
+        print('Coming soon')
+
+    def __show_sofa(self): # pylint: disable=R0201
+        print('Coming soon')
+
+    def __show_difficulty(self): # pylint: disable=R0201
+        print('Coming soon')
+
+    def __check_puzzle(self): # pylint: disable=R0201
+        print('Coming soon...')
+
 
     def __draw_solution_count(self):
         count = self.game.count_solutions()
