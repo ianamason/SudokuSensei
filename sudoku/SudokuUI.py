@@ -13,9 +13,7 @@
 
 import tkinter as tk
 
-from tkinter import messagebox
-
-from .Constants import TITLE, WIDTH, HEIGHT, MARGIN, SIDE, ALEPH_NOUGHT
+from .Constants import TITLE, WIDTH, HEIGHT, PAD, MARGIN, SIDE, ALEPH_NOUGHT
 
 class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
     """The Tkinter UI, responsible for drawing the board and accepting user input."""
@@ -34,13 +32,20 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
     def __init_ui(self, parent):
         parent.title(TITLE)
 
-        # split the UI into a canvas and a control panel
-        self.controls = tk.Frame(parent, width=WIDTH)
+        # split the UI into a message panel, canvas, and a control panel
+        self.messages = tk.Frame(parent, width=WIDTH, height=50)
+        self.controls = tk.Frame(parent, width=WIDTH, height=100)
         self.canvas = tk.Canvas(parent, width=WIDTH, height=HEIGHT)
 
-        self.controls.pack(side="bottom", fill="both", expand=True)
-        self.canvas.pack(side="top", fill="both", expand=True)
+        self.messages.grid(column=0, row=0, sticky="we")
+        self.canvas.grid(column=0, row=1, sticky="we")
+        self.controls.grid(column=0, row=2, sticky="we")
 
+        self.message_text = tk.StringVar()
+        self.message_text.set("Welcome to Sudoku Sensei")
+
+        self.messagebox = tk.Label(self.messages, textvariable=self.message_text)
+        self.messagebox.pack(side="top", fill="both", pady=2*PAD, expand=True)
 
         self.clear_var = tk.StringVar(parent)
         self.clear_choices = ['', 'Puzzle', 'Solution']
@@ -48,7 +53,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         self.clear_var.trace(callback=self.__dispatch_clear_choice, mode='w')
 
         self.show_var = tk.StringVar(parent)
-        self.show_choices = ['', 'Hint', '# Solutions', 'Freedom', 'Difficulty', 'Sofa', ]
+        self.show_choices = ['', 'Least Free', 'Hint', '# Solutions', 'Freedom', 'Difficulty', 'Sofa', ]
         self.show_var.set('')
         self.show_var.trace(callback=self.__dispatch_show_choice, mode='w')
 
@@ -90,7 +95,9 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
 
     def __dispatch_show_choice(self, *args): # pylint: disable=W0613
         desire = self.show_var.get()
-        if desire == 'Hint':
+        if desire == 'Least Free':
+            self.__show_least_free()
+        elif desire == 'Hint':
             self.__show_hint()
         elif desire == '# Solutions':
             self.__show_solution_count()
@@ -101,7 +108,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         elif desire == 'Sofa':
             self.__show_sofa()
         else:
-            print('Huh?')
+            pass
 
 
 
@@ -112,7 +119,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         elif desire == 'Solution':
             self.__clear_solution()
         else:
-            print('Huh?')
+            pass
 
 
     def __draw_grid(self):
@@ -223,10 +230,12 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
     def __clear_messages(self):
         for tag in ['victory', 'failure', 'count']:
             self.canvas.delete(tag)
+        self.message_text.set('')
 
     def __new_puzzle(self):
-        self.game.new()
         self.__clear_messages()
+        difficulty, target, empty_cells = self.game.new()
+        self.message_text.set(f'Difficulty: {difficulty} Target: {target} Empty: {empty_cells}')
         self.__draw_puzzle()
 
     def __clear_puzzle(self):
@@ -246,8 +255,26 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         self.__draw_puzzle()
 
     def __show_solution_count(self):
-        self.__draw_solution_count()
-        self.__draw_puzzle()
+        count = self.game.count_solutions()
+        if count == 0:
+            text = 'There are no solutions.'
+        elif count == 1:
+            text = 'There is a unique solution.'
+        elif count < ALEPH_NOUGHT:
+            text = f'There are {count} solutions'
+        else:
+            text = f'There are >= {ALEPH_NOUGHT} solutions'
+        self.message_text.set(text)
+        #self.__draw_solution_count()
+        #self.__draw_puzzle()
+
+    def __show_least_free(self):
+        cell = self.game.least_free()
+        text = f'A least free cell is: {cell}'
+        self.message_text.set(text)
+        if cell is not None:
+            self.row, self.col = cell
+            self.__draw_cursor()
 
     def __show_hint(self):
         success, hint = self.game.get_hint()
@@ -261,27 +288,19 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         print(f'The cell [{i}, {j}] should contain {val}')
         tk.messagebox.showinfo(f'A Hint: {count} rules are needed', hint)
 
-    def __show_freedom(self): # pylint: disable=R0201
-        print('Coming soon')
+    def __show_freedom(self):
+        self.message_text.set('Coming soon...')
 
-    def __show_sofa(self): # pylint: disable=R0201
-        print('Coming soon')
+    def __show_sofa(self):
+        self.message_text.set('Coming soon...')
 
-    def __show_difficulty(self): # pylint: disable=R0201
-        print('Coming soon')
-
-    def __check_puzzle(self): # pylint: disable=R0201
-        print('Coming soon...')
-
-
-    def __draw_solution_count(self):
-        count = self.game.count_solutions()
-        if count == 0:
-            text = 'There are no solutions.'
-        elif count == 1:
-            text = 'There is a unique solution.'
-        elif count < ALEPH_NOUGHT:
-            text = f'There are {count} solutions'
+    def __show_difficulty(self):
+        diff = self.game.get_difficulty()
+        empty_cells = self.game.get_empty_cell_count()
+        if diff < 0:
+            self.message_text.set('The puzzle has no solution.')
         else:
-            text = f'There are >= {ALEPH_NOUGHT} solutions'
-        messagebox.showinfo(f'|Solutions| = {count}', text)
+            self.message_text.set(f'The current difficulty metric is: {diff} and {empty_cells} empty cells remaining.')
+
+    def __check_puzzle(self):
+        self.message_text.set('Coming soon...')

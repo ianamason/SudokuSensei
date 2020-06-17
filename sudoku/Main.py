@@ -44,7 +44,7 @@ def main():
 
         root = Tk()
         SudokuUI(root, game)
-        root.geometry("{0}x{1}".format(WIDTH, HEIGHT + 40))
+        root.geometry("{0}x{1}".format(WIDTH, HEIGHT + 120))
         root.mainloop()
         game.dispose()
 

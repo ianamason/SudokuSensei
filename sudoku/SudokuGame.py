@@ -13,7 +13,7 @@
 
 from .SudokuLib import Puzzle
 from .SudokuSolver import SudokuSolver
-from .SudokuGenerator import SudokuGenerator
+from .SudokuGenerator import SudokuGenerator, solve
 
 class SudokuGame:
     """
@@ -41,9 +41,10 @@ class SudokuGame:
         generator = SudokuGenerator()
         score = generator.generate()
         generator.puzzle.pprint()
-        print(f'Difficulty: {score} Target: {SudokuGenerator.TGT_DIFF} Empty: {generator.puzzle.empty_cells} ')
+        print(f'Difficulty: {score} Target: {SudokuGenerator.TGT_DIFF} Empty: {generator.puzzle.empty_cells}')
         self.start_puzzle = generator.puzzle.clone()
         self.start()
+        return (score, SudokuGenerator.TGT_DIFF, generator.puzzle.empty_cells)
 
     def solve(self):
         """solve uses the SMT solver to solve the current game."""
@@ -62,6 +63,18 @@ class SudokuGame:
         """returns the easiest hint."""
         return self.solver.get_hint()
 
+    def get_difficulty(self):
+        """returns the difficulty of the puzzle, as is, or -1 if it is not solvable."""
+        diff = [0]
+        code = solve(self.puzzle, None, diff)
+        if code == 0:
+            return diff[0]
+        return -1
+
+    def get_empty_cell_count(self):
+        """returns the number of empty cells in the current puzzle."""
+        return self.puzzle.empty_cells
+
     def clear_solution(self):
         """clear_solution resets the solution."""
         self.solution = None
@@ -73,6 +86,10 @@ class SudokuGame:
             vals = ' '.join([str(x) for x in range(1, 10) if x in freedom])
             print(f'[{row}, {col}]: {vals}')
         print(f'least free: {self.puzzle.least_free()}')
+
+    def least_free(self):
+        """returns the least free cell."""
+        return self.puzzle.least_free()
 
     def check_win(self):
         """check_win determines if the current game has been solved."""
