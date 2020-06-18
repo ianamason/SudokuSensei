@@ -8,6 +8,8 @@ from yices.Terms import Terms
 
 from .StringBuilder import StringBuilder
 
+from .Constants import DEBUG
+
 int_t = Types.int_type()
 
 
@@ -62,13 +64,12 @@ def make_freedom_map():
             freedom[(row, col)] = set()
     return freedom
 
-def make_sofa_map():
-    """constructs an initially empty sofa map."""
-    sofa = {}
+def make_value2cells_map():
+    """constructs an initially empty mapping from values to cells."""
+    v2c = {}
     for val in range(1, 10):
-        # the set represents the cells that CANNOT contain the 'val'
-        sofa[val] = set()
-    return sofa
+        v2c[val] = set()
+    return v2c
 
 class Freedom:
     """Represents simple freedom analysis of a puzzle.
@@ -78,25 +79,68 @@ class Freedom:
     """
 
     def __init__(self):
+
+        # the set represents the values a cell CANNOT take
         self.freedom = make_freedom_map()
-        self.sofa_map = make_sofa_map()
+
+        # the set represents the cells that CANNOT contain the 'val'
+        self.sofa_map = make_value2cells_map()
 
     def dump(self):
+        """prints out the maps for debugging."""
+        self.dump_freedom()
+        self.dump_sofa()
+
+    def dump_freedom(self):
         """prints out the freedom map for debugging."""
         for row in range(9):
             for col in range(9):
                 print(f'[{row}, {col}]: {self.freedom_set(row, col)}')
 
+
+    def dump_sofa(self):
+        """prints out the sofa map for debugging."""
+        for val in range(1, 10):
+            print(f'\n{val} (|{len(self.sofa_map[val])}|):\t{self.sofa_map[val]}')
+
+    def update_sofa(self, row, col, val, oval):
+        """update the sofa map.
+
+        We are changing the contents of [row, col] from oval to val.
+        So only sofa_map[oval] and sofa_map[val] will change, and they will only
+        change for cells in Regions.influence(row, col).
+        """
+        assert oval is not None or val is None
+        assert oval is not val
+        oval_set = self.sofa_map[oval]                               # the empty cells that cannot contain oval (should decrease)
+        val_set = self.sofa_map[val] if val is not None else None    # the empty cells that cannot contain val (should increase)
+        for cell in Regions.influence(row, col):
+            fset = self.freedom[cell]
+            if oval not in fset:
+                oval_set.discard(cell)
+            if val is not None and val in fset:
+                val_set.add(cell)
+
+    def sanity_check_sofa(self, grid):
+        """We check that every sofa set agrees with the freedom analysis."""
+        for val in range(1, 10):
+            for cell in self.sofa_map[val]:
+                if grid[cell[0]][cell[1]] is not None:
+                    print(f'Wrong: {val} {cell} is not empty.')
+                    return False
+                if val not in self.freedom[cell]:
+                    print(f'Wrong: {val} {cell} is value if free.')
+                    return False
+        return True
+
     def constrain_set_cell(self, grid, row, col, val, oval):
         """update the freedom map by adding the fact that cell (row, col) contents is being updated from oval to val."""
-        # incremental is hard (if the puzzle is already borked)
         assert grid[row][col] == val  #make sure the grid has already been updated
         self.update(grid, row, col, val, oval)
 
 
     def constrain_erase_cell(self, grid, row, col, oval):
         """update the freedom map by removing the fact that cell (row, col) contains oval."""
-        # incremental is hard (if the puzzle is already borked)
         assert grid[row][col] is None  #make sure the grid has already been updated
         self.update(grid, row, col, None, oval)
 
@@ -107,13 +151,21 @@ class Freedom:
             for cell in Regions.influence(row, col):
                 if cell != (row, col):
                     self.freedom[cell].add(val)
+                    # the sofa is almost straight forward:
+                    if grid[cell[0]][cell[1]] is None:
+                        self.sofa_map[val].add(cell)
+                    # but we also have to incorporate the fact that [row, col] is no longer empty:
+                    for x in range(1, 10):
+                        self.sofa_map[x].discard((row, col))
         else:
-            # just recompute the entire region of influence
+            # for the freedom map: just recompute the entire region of influence
             for cell in Regions.influence(row, col):
                 self.freedom[cell] = Regions.forbidden_set(grid, cell[0], cell[1])
+            # once the freedom map is done we can do the sofa map
+            self.update_sofa(row, col, val, oval)
 
     def constrain(self, matrix):
-        """computes the set oriented freedom analysis."""
+        """computes the cell freedom analysis."""
         for row in range(9):
             for col in range(9):
                 self.freedom[(row, col)] = Regions.forbidden_set(matrix, row, col)
@@ -268,9 +320,15 @@ class Puzzle:
 
 
     def __init__(self, matrix=None):
+        # the grid is the 9x9 matrix
         self.grid = make_grid()
+        # the freedom obj mantains the freedom analysis
         self.freedom = Freedom()
+        # the number of empty cells (informational carrot)
         self.empty_cells = 81
+        # keep track of the cells that each digit resides in (for the sofa analysis)
+        self.value_map = make_value2cells_map()
+
         if matrix is not None:
             for i in range(9):
                 for j in range(9):
@@ -281,6 +339,7 @@ class Puzzle:
     def copy(self, puzzle):
         """copy the state of another puzzle."""
         self.__init__(puzzle.grid)
+
 
     def agree(self, puzzle):
         """see if two puzzles agree on non-None cells."""
@@ -300,9 +359,15 @@ class Puzzle:
                 val = self.grid[row][col]
                 if val is not None:
                     if not self.freedom.contains(row, col, val):
-                        print(f'Insane: [{row}, {col}]: {val}')
+                        if DEBUG:
+                            print(f'Insane: [{row}, {col}]: {val}')
                         return False
         return True
+
+    def sanity_check_sofa(self):
+        """we check that the sofa analysis is sane."""
+        return self.freedom.sanity_check_sofa(self.grid)
+
 
     def get_row(self, row):
         """get_row returns a copy of the given row."""
@@ -323,6 +388,7 @@ class Puzzle:
             if val is not None:
                 self.empty_cells += 1
                 self.grid[i][j] = None
+                self.value_map[val].remove((i, j))
                 self.freedom.constrain_erase_cell(self.grid, i, j, val)
             return None
         raise SudokuError(f'erase_cell error: {i} {j}')
@@ -334,7 +400,10 @@ class Puzzle:
             if oval != val:
                 if oval is None and val is not None:
                     self.empty_cells -= 1
+                if oval is not None:
+                    self.value_map[oval].remove((i, j))
                 self.grid[i][j] = val
+                self.value_map[val].add((i, j))
                 self.freedom.constrain_set_cell(self.grid, i, j, val, oval)
             return None
         raise SudokuError(f'set_cell error: {i} {j} {val}')
@@ -344,6 +413,11 @@ class Puzzle:
         if 0 <= i <= 8 and 0 <= j <= 8:
             return self.grid[i][j]
         raise SudokuError(f'get_cell error:{i} {j}')
+
+    def dump_value_map(self):
+        """print out the current state of the value map"""
+        for val in range(1, 10):
+            print(f'{val}: {self.value_map[val]}')
 
     def to_string(self, pad='  ', blank='.', newline='\n'):
         """to_string produces a string reresentation of the puzzle."""

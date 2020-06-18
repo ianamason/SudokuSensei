@@ -71,6 +71,15 @@ class SudokuGame:
             return diff[0]
         return -1
 
+    def check(self):
+        """Do a quick check that thepuzzle is still solvable (i.e. we haven't goofed."""
+        return solve(self.puzzle, None, None) == 0
+
+    def sanity_check(self):
+        """this is for debugging, we check that all our data structures make sense."""
+        print(f'puzzle.sanity_check() = {self.puzzle.sanity_check()}')
+        print(f'puzzle.sanity_check_sofa() = {self.puzzle.sanity_check_sofa()}')
+
     def get_empty_cell_count(self):
         """returns the number of empty cells in the current puzzle."""
         return self.puzzle.empty_cells

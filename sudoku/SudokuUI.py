@@ -13,7 +13,9 @@
 
 import tkinter as tk
 
-from .Constants import TITLE, WIDTH, HEIGHT, PAD, MARGIN, SIDE, ALEPH_NOUGHT
+from tkinter import messagebox
+
+from .Constants import DEBUG, TITLE, WIDTH, HEIGHT, PAD, MARGIN, SIDE, ALEPH_NOUGHT
 
 class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
     """The Tkinter UI, responsible for drawing the board and accepting user input."""
@@ -38,7 +40,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         self.canvas = tk.Canvas(parent, width=WIDTH, height=HEIGHT)
 
         self.messages.grid(column=0, row=0, sticky="we")
-        self.canvas.grid(column=0, row=1, sticky="we")
+        self.canvas.grid(column=0, row=1, sticky="we", padx=PAD)
         self.controls.grid(column=0, row=2, sticky="we")
 
         self.message_text = tk.StringVar()
@@ -53,7 +55,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         self.clear_var.trace(callback=self.__dispatch_clear_choice, mode='w')
 
         self.show_var = tk.StringVar(parent)
-        self.show_choices = ['', 'Least Free', 'Hint', '# Solutions', 'Freedom', 'Difficulty', 'Sofa', ]
+        self.show_choices = ['', 'Least Free', 'Hint', '# Solutions', 'Freedom', 'Difficulty', 'Sofa', 'Sanity Check']
         self.show_var.set('')
         self.show_var.trace(callback=self.__dispatch_show_choice, mode='w')
 
@@ -107,6 +109,8 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
             self.__show_difficulty()
         elif desire == 'Sofa':
             self.__show_sofa()
+        elif desire == 'Sanity Check':
+            self.__sanity_check()
         else:
             pass
 
@@ -188,7 +192,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         self.__draw_message('victory', 'You win!', 'dark orange', 'orange')
 
     def __draw_no_solution(self): # pylint: disable=R0201
-        tk.messagebox.showinfo('Bummer', 'No Solution!')
+        messagebox.showinfo('Bummer', 'No Solution!')
 
     def __cell_clicked(self, event):
         if self.game.game_over:
@@ -203,8 +207,9 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
             # if cell was selected already - deselect it
             if (row, col) == (self.row, self.col):
                 self.row, self.col = -1, -1
-            #iam: the elif choice makes an entry permanent, not sure why Lynn Root chose that route.
-            #elif self.game.puzzle[row][col] == 0:
+            #iam: the elif choice makes an original entry permanent.
+            elif self.game.start_puzzle.get_cell(row, col) is not None:
+                return
             else:
                 self.row, self.col = row, col
         else:
@@ -215,17 +220,23 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
     def __key_pressed(self, event):
         if self.game.game_over:
             return
-        if self.row >= 0 and self.col >= 0 and event.char in '1234567890':
+        if self.row < 0 or self.col < 0:
+            return
+        if event.keysym == "BackSpace":
+            self.game.puzzle.erase_cell(self.row, self.col)
+        elif event.char in '1234567890':
             val = int(event.char)
             if val == 0:
                 self.game.puzzle.erase_cell(self.row, self.col)
             else:
                 self.game.puzzle.set_cell(self.row, self.col, val)
-            self.col, self.row = -1, -1
-            self.__draw_puzzle()
-            self.__draw_cursor()
-            if self.game.check_win():
-                self.__draw_victory()
+        else:
+            return
+        self.col, self.row = -1, -1
+        self.__draw_puzzle()
+        self.__draw_cursor()
+        if self.game.check_win():
+            self.__draw_victory()
 
     def __clear_messages(self):
         for tag in ['victory', 'failure', 'count']:
@@ -239,7 +250,6 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         self.__draw_puzzle()
 
     def __clear_puzzle(self):
-        print('clearing')
         self.game.start()
         self.__clear_messages()
         self.__draw_puzzle()
@@ -265,8 +275,6 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         else:
             text = f'There are >= {ALEPH_NOUGHT} solutions'
         self.message_text.set(text)
-        #self.__draw_solution_count()
-        #self.__draw_puzzle()
 
     def __show_least_free(self):
         cell = self.game.least_free()
@@ -279,20 +287,26 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
     def __show_hint(self):
         success, hint = self.game.get_hint()
         if success is None:
-            tk.messagebox.showinfo('Sorry', hint)
+            messagebox.showinfo('Sorry', hint)
             return
         (i, j, val, count) = success
         self.row = i
         self.col = j
         self.__draw_cursor()
-        print(f'The cell [{i}, {j}] should contain {val}')
-        tk.messagebox.showinfo(f'A Hint: {count} rules are needed', hint)
+        if DEBUG:
+            print(f'The cell [{i}, {j}] should contain {val}')
+        messagebox.showinfo(f'A Hint: {count} rules are needed', hint)
 
     def __show_freedom(self):
-        self.message_text.set('Coming soon...')
+        self.game.puzzle.freedom.dump_freedom()
 
     def __show_sofa(self):
-        self.message_text.set('Coming soon...')
+        self.game.puzzle.dump_value_map()
+        self.game.puzzle.freedom.dump_sofa()
+
+    def __sanity_check(self):
+        self.game.sanity_check()
+
 
     def __show_difficulty(self):
         diff = self.game.get_difficulty()
@@ -303,4 +317,9 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
             self.message_text.set(f'The current difficulty metric is: {diff} and {empty_cells} empty cells remaining.')
 
     def __check_puzzle(self):
-        self.message_text.set('Coming soon...')
+        status = self.game.check()
+        if status:
+            empty_cells = self.game.get_empty_cell_count()
+            self.message_text.set(f'Everything seems OK, there are {empty_cells} left.')
+        else:
+            self.message_text.set('Something is wrong!')

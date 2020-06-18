@@ -147,7 +147,7 @@ def solve(problem, solution, diff):
     if diff is not None:
         diff[0] = (ctx.branch_score * 100) + problem.empty_cells
 
-    print(f'solver returns {ctx.count - 1}  diff {diff[0]} empty {problem.empty_cells}')
+    print(f'solver returns {ctx.count - 1}  diff {diff[0] if diff is not None else "?"} empty {problem.empty_cells}')
     return ctx.count - 1
 
 
