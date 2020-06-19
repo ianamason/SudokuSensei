@@ -4,6 +4,7 @@ import random
 
 from .SudokuLib import SudokuError, Puzzle
 
+from .Constants import DEBUG
 
 _ELEMENTS = tuple(range(81))
 
@@ -28,7 +29,6 @@ def index2cell(index):
     if 0 <= index < 81:
         return _CELLS[index]
     raise SudokuError(f'index2cell error: {index}')
-
 
 def pick_one(choices):
     """randomly chooses an element of the given set."""
@@ -136,27 +136,20 @@ class SolveContext:
 def solve(problem, solution, diff):
     """python equivalent to David Beer's solve function."""
     ctx = SolveContext(problem, solution)
-
     if not problem.sanity_check():
         return -1
-
-    #solve_recurse(ctx, problem.freedom, 0)
     solve_recurse(ctx, 0)
-
     # calculate a difficulty score
     if diff is not None:
         diff[0] = (ctx.branch_score * 100) + problem.empty_cells
-
-    print(f'solver returns {ctx.count - 1}  diff {diff[0] if diff is not None else "?"} empty {problem.empty_cells}')
+    if DEBUG:
+        print(f'solver returns {ctx.count - 1}  diff {diff[0] if diff is not None else "?"} empty {problem.empty_cells}')
     return ctx.count - 1
 
 
-#def solve_recurse(ctx, freedom, diff):
 def solve_recurse(ctx, diff):
     """python equivalent to David Beer's solve_recurse function."""
-
     least_free_cell = ctx.problem.least_free()
-
     if least_free_cell is None:
         if ctx.count == 0:
             ctx.branch_score = diff
@@ -164,19 +157,12 @@ def solve_recurse(ctx, diff):
                 ctx.solution.copy(ctx.problem)
         ctx.count += 1
         return
-
     row, col = least_free_cell
-
     free = ctx.problem.freedom.freedom_set(row, col)
-
     bf = len(free) - 1
     diff += bf * bf
-
     for val in free:
-        #new_freedom = freedom.clone()
         ctx.problem.set_cell(row, col, val)
-        #new_freedom.constrain_set_cell(ctx.problem.grid, row, col, val, None)
-        #solve_recurse(ctx, new_freedom, diff)
         solve_recurse(ctx, diff)
         if ctx.count >= 2:
             return

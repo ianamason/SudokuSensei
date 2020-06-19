@@ -17,10 +17,27 @@ from tkinter import messagebox
 
 from .Constants import DEBUG, TITLE, WIDTH, HEIGHT, PAD, MARGIN, SIDE, ALEPH_NOUGHT
 
+delta = SIDE / 4
+
+"""handle the layout of freedom entries in a cell."""
+DELTA = {
+    1: (delta, delta),
+    2: (2*delta, delta),
+    3: (3*delta, delta),
+    4: (delta, 2*delta),
+    5: (2*delta, 2*delta),
+    6: (3*delta, 2*delta),
+    7: (delta, 3*delta),
+    8: (2*delta, 3*delta),
+    9: (3*delta, 3*delta),
+}
+
 class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
     """The Tkinter UI, responsible for drawing the board and accepting user input."""
 
     font = ('Arial', 32)
+
+    free_font = ('Arial', 10)
 
     def __init__(self, parent, game):
         tk.Frame.__init__(self, parent)
@@ -144,24 +161,35 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
             self.canvas.create_line(x0, y0, x1, y1, fill=color)
 
 
-    def __draw_puzzle(self):
+    def __draw_free(self, row, col, free):
+        x = MARGIN + col * SIDE
+        y = MARGIN + row * SIDE
+        for val in free:
+            dloc = DELTA[val]
+            self.canvas.create_text(x + dloc[0], y + dloc[1], text=str(val), tags='free', fill='red', font=SudokuUI.free_font)
+
+
+    def __draw_puzzle(self, freedom=None):
         self.canvas.delete('numbers')
-        for i in range(9):
-            for j in range(9):
-                answer = self.game.puzzle.get_cell(i, j)
+        self.canvas.delete('free')
+        for row in range(9):
+            for col in range(9):
+                answer = self.game.puzzle.get_cell(row, col)
                 if answer is not None:
-                    x = MARGIN + j * SIDE + SIDE / 2
-                    y = MARGIN + i * SIDE + SIDE / 2
-                    original = self.game.start_puzzle.get_cell(i, j)
+                    x = MARGIN + col * SIDE + SIDE / 2
+                    y = MARGIN + row * SIDE + SIDE / 2
+                    original = self.game.start_puzzle.get_cell(row, col)
                     color = 'black' if answer == original else 'sea green'
                     self.canvas.create_text(x, y, text=answer, tags='numbers', fill=color, font=SudokuUI.font)
                 elif self.game.solution is not None:
-                    solution = self.game.solution.get_cell(i, j)
+                    solution = self.game.solution.get_cell(row, col)
                     if solution is not None:
-                        x = MARGIN + j * SIDE + SIDE / 2
-                        y = MARGIN + i * SIDE + SIDE / 2
+                        x = MARGIN + col * SIDE + SIDE / 2
+                        y = MARGIN + row * SIDE + SIDE / 2
                         self.canvas.create_text(x, y, text=solution, tags='numbers', fill='purple', font=SudokuUI.font)
-
+                else:
+                    if freedom is not None:
+                        self.__draw_free(row, col, freedom.freedom_set(row, col))
 
     def __draw_cursor(self):
         self.canvas.delete('cursor')
@@ -298,7 +326,8 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         messagebox.showinfo(f'A Hint: {count} rules are needed', hint)
 
     def __show_freedom(self):
-        self.game.puzzle.freedom.dump_freedom()
+        self.__draw_puzzle(self.game.puzzle.freedom)
+
 
     def __show_sofa(self):
         self.game.puzzle.dump_value_map()

@@ -55,16 +55,15 @@ def make_variables():
             variables[i][j] = Terms.new_uninterpreted_term(int_t)
     return variables
 
-def make_freedom_map():
-    """constructs an initially empty freedom map."""
-    freedom = {}
+def make_cell_map():
+    """constructs an initially empty cell map."""
+    cell_map = {}
     for row in range(9):
         for col in range(9):
-            # the set represents the values a cell CANNOT take
-            freedom[(row, col)] = set()
-    return freedom
+            cell_map[(row, col)] = set()
+    return cell_map
 
-def make_value2cells_map():
+def make_value_map():
     """constructs an initially empty mapping from values to cells."""
     v2c = {}
     for val in range(1, 10):
@@ -81,10 +80,10 @@ class Freedom:
     def __init__(self):
 
         # the set represents the values a cell CANNOT take
-        self.freedom = make_freedom_map()
+        self.freedom = make_cell_map()
 
         # the set represents the cells that CANNOT contain the 'val'
-        self.sofa_map = make_value2cells_map()
+        self.sofa_map = make_value_map()
 
     def dump(self):
         """prints out the maps for debugging."""
@@ -327,7 +326,7 @@ class Puzzle:
         # the number of empty cells (informational carrot)
         self.empty_cells = 81
         # keep track of the cells that each digit resides in (for the sofa analysis)
-        self.value_map = make_value2cells_map()
+        self.value_map = make_value_map()
 
         if matrix is not None:
             for i in range(9):
