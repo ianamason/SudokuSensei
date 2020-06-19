@@ -75,10 +75,10 @@ endif
 
 lint: check_lint
 # for detecting just errors:
-	@ $(PYLINT) -E  sudoku/*.py *.py
+	@ $(PYLINT) -E  sudoku/*.py *.py db_bindings/*.py
 
 lint_all: check_lint
 # for detecting more than just errors:
-	@ $(PYLINT) --disable=duplicate-code --rcfile=.pylintrc  sudoku/*.py *.py
+	@ $(PYLINT) --disable=duplicate-code --rcfile=.pylintrc  sudoku/*.py *.py db_bindings/*.py
 
 .PHONY: lint check_lint rstify check_md2rst

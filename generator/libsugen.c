@@ -658,12 +658,6 @@ static void choose_grid(uint8_t *grid)
  * the algorithm to wander for a few steps before starting again from the
  * best-so-far puzzle.
  */
-static int harden_puzzle(const uint8_t *solution, uint8_t *puzzle, int max_iter, int max_score, int target_score, bool sofa);
-
-void db_harden_puzzle(const uint8_t* solution, uint8_t* puzzle, uint32_t* difficultyp, int max_iter, int max_difficulty, int target_difficulty, bool sofa){
-  *difficultyp = harden_puzzle(solution, puzzle, max_iter, max_difficulty, target_difficulty, sofa);
-  return;
-}
 
 static int harden_puzzle(const uint8_t *solution, uint8_t *puzzle, int max_iter, int max_score, int target_score, bool sofa)
 {

@@ -17,20 +17,9 @@ from tkinter import messagebox
 
 from .Constants import DEBUG, TITLE, WIDTH, HEIGHT, PAD, MARGIN, SIDE, ALEPH_NOUGHT
 
-delta = SIDE / 4
+from .SudokuLib import make_cell_map
 
-"""handle the layout of freedom entries in a cell."""
-DELTA = {
-    1: (delta, delta),
-    2: (2*delta, delta),
-    3: (3*delta, delta),
-    4: (delta, 2*delta),
-    5: (2*delta, 2*delta),
-    6: (3*delta, 2*delta),
-    7: (delta, 3*delta),
-    8: (2*delta, 3*delta),
-    9: (3*delta, 3*delta),
-}
+delta = SIDE / 4
 
 class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
     """The Tkinter UI, responsible for drawing the board and accepting user input."""
@@ -39,12 +28,17 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
 
     free_font = ('Arial', 12)
 
+    note_font_a = ('Arial', 18)
+    note_font_b = ('Arial', 14)
+    note_font_c = ('Arial', 10)
+
     def __init__(self, parent, game):
         tk.Frame.__init__(self, parent)
         self.game = game
         self.parent = parent
         self.row, self.col = -1, -1
         self.freedom = None
+        self.notes = make_cell_map()
         self.__init_ui(parent)
 
 
@@ -87,8 +81,6 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
 
 
     def _create_controls(self, parent):
-
-
         clear_label = tk.Label(parent, text="Clear ...")
         show_label = tk.Label(parent, text="Show ...")
 
@@ -164,17 +156,28 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
             self.canvas.create_line(x0, y0, x1, y1, fill=color)
 
 
+    def __draw_notes(self, row, col):
+        contents = self.notes[(row, col)]
+        count = len(contents)
+        if count == 0:
+            return
+        x = MARGIN + col * SIDE
+        y = MARGIN + row * SIDE
+        font = SudokuUI.note_font_a if count < 4 else SudokuUI.note_font_b
+        self.canvas.create_text(x + 2 * delta, y + 2 * delta, text='12', tags='notes', fill='grey', font=font)
+
     def __draw_free(self, row, col, free):
         x = MARGIN + col * SIDE
         y = MARGIN + row * SIDE
         for val in free:
-            dloc = DELTA[val]
-            self.canvas.create_text(x + dloc[0], y + dloc[1], text=str(val), tags='free', fill='red', font=SudokuUI.free_font)
+            dx, dy = (1 + (val - 1)%3) * delta, (1 + (val - 1)//3) * delta
+            self.canvas.create_text(x + dx, y + dy, text=str(val), tags='free', fill='red', font=SudokuUI.free_font)
 
 
     def __draw_puzzle(self):
         self.canvas.delete('numbers')
         self.canvas.delete('free')
+        self.canvas.delete('notes')
         for row in range(9):
             for col in range(9):
                 answer = self.game.puzzle.get_cell(row, col)
@@ -193,6 +196,8 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
                 else:
                     if self.freedom is not None:
                         self.__draw_free(row, col, self.freedom.freedom_set(row, col))
+                    else:
+                        self.__draw_notes(row, col)
 
     def __draw_cursor(self):
         self.canvas.delete('cursor')
