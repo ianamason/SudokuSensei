@@ -85,10 +85,10 @@ class Freedom:
         # the set represents the cells that CANNOT contain the 'val'
         self.sofa_map = make_value_map()
 
-    def dump(self):
+    def dump(self, puzzle):
         """prints out the maps for debugging."""
         self.dump_freedom()
-        self.dump_sofa()
+        self.dump_sofa(puzzle)
 
     def dump_freedom(self):
         """prints out the freedom map for debugging."""
@@ -97,10 +97,10 @@ class Freedom:
                 print(f'[{row}, {col}]: {self.freedom_set(row, col)}')
 
 
-    def dump_sofa(self):
+    def dump_sofa(self, puzzle):
         """prints out the sofa map for debugging."""
         for val in range(1, 10):
-            print(f'\n{val} (|{len(self.sofa_map[val])}|):\t{self.sofa_map[val]}')
+            print(f'\n{val} (|{puzzle.empty_cells - len(self.sofa_map[val])}|):\t{self.sofa_map[val]}')
 
     def update_sofa(self, row, col, val, oval):
         """update the sofa map.
@@ -111,8 +111,10 @@ class Freedom:
         """
         assert oval is not None or val is None
         assert oval is not val
-        oval_set = self.sofa_map[oval]                               # the empty cells that cannot contain oval (should decrease)
-        val_set = self.sofa_map[val] if val is not None else None    # the empty cells that cannot contain val (should increase)
+        # the empty cells that cannot contain oval (should decrease)
+        oval_set = self.sofa_map[oval]
+        # the empty cells that cannot contain val (should increase)
+        val_set = self.sofa_map[val] if val is not None else None
         for cell in Regions.influence(row, col):
             fset = self.freedom[cell]
             if oval not in fset:

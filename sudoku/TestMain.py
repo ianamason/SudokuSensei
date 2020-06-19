@@ -15,7 +15,7 @@ def test0():
     puzzle = Puzzle()
     choose_solution(puzzle)
     if not puzzle.sanity_check():
-        puzzle.freedom.dump()
+        puzzle.freedom.dump(puzzle)
     puzzle.pprint()
     print(f'Sanity: {puzzle.sanity_check()} #empty_cells = {puzzle.empty_cells}')
 

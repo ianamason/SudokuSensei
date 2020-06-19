@@ -37,14 +37,14 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
 
     font = ('Arial', 32)
 
-    free_font = ('Arial', 10)
+    free_font = ('Arial', 12)
 
     def __init__(self, parent, game):
         tk.Frame.__init__(self, parent)
         self.game = game
         self.parent = parent
         self.row, self.col = -1, -1
-
+        self.freedom = None
         self.__init_ui(parent)
 
 
@@ -67,7 +67,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         self.messagebox.pack(side="top", fill="both", pady=2*PAD, expand=True)
 
         self.clear_var = tk.StringVar(parent)
-        self.clear_choices = ['', 'Puzzle', 'Solution']
+        self.clear_choices = ['', 'Freedom', 'Puzzle', 'Solution']
         self.clear_var.set('')
         self.clear_var.trace(callback=self.__dispatch_clear_choice, mode='w')
 
@@ -135,12 +135,15 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
 
     def __dispatch_clear_choice(self, *args): # pylint: disable=W0613
         desire = self.clear_var.get()
+        if desire == 'Freedom':
+            self.freedom = None
         if desire == 'Puzzle':
             self.__clear_puzzle()
         elif desire == 'Solution':
             self.__clear_solution()
         else:
             pass
+        self.__draw_puzzle()
 
 
     def __draw_grid(self):
@@ -169,7 +172,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
             self.canvas.create_text(x + dloc[0], y + dloc[1], text=str(val), tags='free', fill='red', font=SudokuUI.free_font)
 
 
-    def __draw_puzzle(self, freedom=None):
+    def __draw_puzzle(self):
         self.canvas.delete('numbers')
         self.canvas.delete('free')
         for row in range(9):
@@ -188,8 +191,8 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
                         y = MARGIN + row * SIDE + SIDE / 2
                         self.canvas.create_text(x, y, text=solution, tags='numbers', fill='purple', font=SudokuUI.font)
                 else:
-                    if freedom is not None:
-                        self.__draw_free(row, col, freedom.freedom_set(row, col))
+                    if self.freedom is not None:
+                        self.__draw_free(row, col, self.freedom.freedom_set(row, col))
 
     def __draw_cursor(self):
         self.canvas.delete('cursor')
@@ -280,12 +283,10 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
     def __clear_puzzle(self):
         self.game.start()
         self.__clear_messages()
-        self.__draw_puzzle()
 
     def __clear_solution(self):
         self.__clear_messages()
         self.game.clear_solution()
-        self.__draw_puzzle()
 
     def __solve_puzzle(self):
         if not self.game.solve():
@@ -326,12 +327,13 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         messagebox.showinfo(f'A Hint: {count} rules are needed', hint)
 
     def __show_freedom(self):
-        self.__draw_puzzle(self.game.puzzle.freedom)
+        self.freedom = self.game.puzzle.freedom
+        self.__draw_puzzle()
 
 
     def __show_sofa(self):
         self.game.puzzle.dump_value_map()
-        self.game.puzzle.freedom.dump_sofa()
+        self.game.puzzle.freedom.dump_sofa(self.game.puzzle)
 
     def __sanity_check(self):
         self.game.sanity_check()

@@ -545,6 +545,7 @@ static void solve_recurse(struct solve_context *ctx, const set_t *freedom, int d
     int size;
 
     size = sofa(ctx->problem, freedom, set, &value);
+    //iam: sofa set is smaller than |freedom[r]| ?
     if (size >= 0 && size < count_bits(mask)) {
       bf = size - 1;
       diff += bf * bf;
