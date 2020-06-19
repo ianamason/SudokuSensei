@@ -24,15 +24,6 @@
 
 #include "sugen.h"
 
-/* Compile this program with:
- *
- *    gcc -O3 -Wall -o sugen sugen.c
- *
- * The puzzle order corresponds to regular Sudoku by default (3), but
- * you can override it by specifying -DORDER=x at compile time. Orders
- * from 1 through 4 are supported.
- */
-
 #ifndef ORDER
 #define ORDER       3
 #endif
@@ -40,204 +31,10 @@
 #define DIM     (ORDER * ORDER)
 #define ELEMENTS    (DIM * DIM)
 
-/************************************************************************
- * Parsing and printing
- *
- * The parser is quite forgiving and designed so that it can also parse
- * grids produced by the pretty-printer.
- */
+/*
+DON'T FORGET TO DO THIS IAN:
 
-struct hline_def {
-  const char    *start;
-  const char    *mid;
-  const char    *end;
-  const char    *major;
-  const char    *minor;
-};
-
-struct gridline_def {
-  struct hline_def  top;
-  struct hline_def  major;
-  struct hline_def  minor;
-  struct hline_def  bottom;
-  const char        *vl_major;
-  const char        *vl_minor;
-};
-
-const static struct gridline_def ascii_def =
-  {
-   .top = { .start = "+", .mid = "-", .end = "+",
-            .major = "+", .minor = "-" },
-   .major = { .start = "+", .mid = "-", .end = "+",
-              .major = "+", .minor = "-" },
-   .minor = { .start = "|", .mid = ".", .end = "|",
-              .major = "|", .minor = ":" },
-   .bottom = { .start = "+", .mid = "-", .end = "+",
-               .major = "+", .minor = "-" },
-   .vl_major = "|",
-   .vl_minor = ":"
-  };
-
-const static struct gridline_def utf8_def =
-  {
-   .top = { .start = "\xe2\x95\x94", .mid = "\xe2\x95\x90",
-            .end = "\xe2\x95\x97",
-            .major = "\xe2\x95\xa6", .minor = "\xe2\x95\xa4"},
-   .major = { .start = "\xe2\x95\xa0", .mid = "\xe2\x95\x90",
-              .end = "\xe2\x95\xa3",
-              .major = "\xe2\x95\xac", .minor = "\xe2\x95\xaa" },
-   .minor = { .start = "\xe2\x95\x9f", .mid = "\xe2\x94\x80",
-              .end = "\xe2\x95\xa2",
-              .major = "\xe2\x95\xab", .minor = "\xe2\x94\xbc" },
-   .bottom = { .start = "\xe2\x95\x9a", .mid = "\xe2\x95\x90",
-               .end = "\xe2\x95\x9d",
-               .major = "\xe2\x95\xa9", .minor = "\xe2\x95\xa7" },
-   .vl_major = "\xe2\x95\x91",
-   .vl_minor = "\xe2\x94\x82"
-  };
-
-static int read_grid(uint8_t *grid)
-{
-  int x = 0;
-  int y = 0;
-  int c;
-  int can_skip = 0;
-
-  memset(grid, 0, sizeof(grid[0]) * ELEMENTS);
-
-  while ((c = getchar()) >= 0) {
-    if (c == '\n') {
-      if (x > 0)
-        y++;
-      x = 0;
-      can_skip = 0;
-    } else if (c == '.' || c == '-') {
-      can_skip = 0;
-    } else if (c == '_' || c == '0') {
-      x++;
-    } else if (c == 0x82 || c == 0x91 || c == '|' || c == ':') {
-      if (can_skip)
-        x++;
-      can_skip = 1;
-    } else if (isalnum(c) && x < DIM && y < DIM) {
-      int v;
-
-      if (isdigit(c))
-        v = c - '0';
-      else if (isupper(c))
-        v = c - 'A' + 10;
-      else
-        v = c - 'a' + 10;
-
-      if (v >= 1 && v <= DIM) {
-        grid[y * DIM + x] = v;
-        x++;
-        can_skip = 0;
-      }
-    }
-  }
-
-  if ((y <= DIM - 1) || ((y == DIM - 1) && (x < DIM))) {
-    fprintf(stderr, "Too few cells in grid. Input ran out at "
-            "position (%d, %d)\n", x, y);
-    return -1;
-  }
-
-  return 0;
-}
-
-static const char alphabet[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-static void grid2fp(FILE* fp, const uint8_t *grid)
-{
-  int y;
-  for (y = 0; y < DIM; y++) {
-    int x;
-    for (x = 0; x < DIM; x++) {
-      int v = grid[y * DIM + x];
-      if (v)
-        fprintf(fp, "%c", alphabet[v]);
-      else
-        fprintf(fp, "0");
-    }
-    fprintf(fp, "\n");
-  }
-}
-
-static void print_grid(const uint8_t *grid)
-{
-  int y;
-
-  for (y = 0; y < DIM; y++) {
-    int x;
-
-    for (x = 0; x < DIM; x++) {
-      int v = grid[y * DIM + x];
-
-      if (x)
-        printf(" ");
-
-      if (v)
-        printf("%c", alphabet[v]);
-      else
-        printf("_");
-    }
-
-    printf("\n");
-  }
-}
-
-static void draw_hline(const struct hline_def *def)
-{
-  int i;
-
-  printf("%s", def->start);
-  for (i = 0; i < DIM; i++) {
-    printf("%s%s%s", def->mid, def->mid, def->mid);
-
-    if (i + 1 < DIM)
-      printf("%s", ((i + 1) % ORDER) ?
-             def->minor : def->major);
-  }
-  printf("%s\n", def->end);
-}
-
-static void print_grid_pretty(const struct gridline_def *def,
-                              const uint8_t *grid)
-{
-  int y;
-
-  draw_hline(&def->top);
-
-  for (y = 0; y < DIM; y++) {
-    int x;
-
-    for (x = 0; x < DIM; x++) {
-      int v = grid[y * DIM + x];
-
-      if (x % ORDER)
-        printf("%s", def->vl_minor);
-      else
-        printf("%s", def->vl_major);
-
-      if (v)
-        printf(" %c ", alphabet[v]);
-      else
-        printf("   ");
-    }
-
-    printf("%s\n", def->vl_major);
-
-    if (y + 1 < DIM) {
-      if ((y + 1) % ORDER)
-        draw_hline(&def->minor);
-      else
-        draw_hline(&def->major);
-    }
-  }
-
-  draw_hline(&def->bottom);
-}
+*/
 
 /************************************************************************
  * Cell freedom analysis.
@@ -380,7 +177,6 @@ static int search_least_free(const uint8_t *problem, const set_t *freedom)
  * If the program is compiled with -DNO_SOFA, this analysis is not used.
  */
 
-#ifndef NO_SOFA
 struct sofa_context {
   const uint8_t     *grid;
   const set_t       *freedom;
@@ -474,7 +270,6 @@ static int sofa(const uint8_t *grid, const set_t *freedom, int *set, int *value)
   *value = ctx.best_value;
   return ctx.best_size;
 }
-#endif
 
 /************************************************************************
  * Solver
@@ -515,7 +310,7 @@ struct solve_context {
   int       branch_score;
 };
 
-static void solve_recurse(struct solve_context *ctx, const set_t *freedom, int diff)
+static void solve_recurse_no_sofa(struct solve_context *ctx, const set_t *freedom, int diff)
 {
   set_t new_free[ELEMENTS];
   set_t mask;
@@ -537,7 +332,45 @@ static void solve_recurse(struct solve_context *ctx, const set_t *freedom, int d
 
   mask = freedom[r];
 
-#ifndef NO_SOFA
+  bf = count_bits(mask) - 1;
+  diff += bf * bf;
+
+  for (i = 0; i < DIM; i++)
+    if (mask & (1 << i)) {
+      memcpy(new_free, freedom, sizeof(new_free));
+      freedom_eliminate(new_free, r % DIM, r / DIM, i + 1);
+      ctx->problem[r] = i + 1;
+      solve_recurse_no_sofa(ctx, new_free, diff);
+
+      if (ctx->count >= 2)
+        return;
+    }
+
+  ctx->problem[r] = 0;
+}
+
+static void solve_recurse_sofa(struct solve_context *ctx, const set_t *freedom, int diff)
+{
+  set_t new_free[ELEMENTS];
+  set_t mask;
+  int r;
+  int i;
+  int bf;
+
+  r = search_least_free(ctx->problem, freedom);
+  if (r < 0) {
+    if (!ctx->count) {
+      ctx->branch_score = diff;
+      if (ctx->solution)
+        memcpy(ctx->solution, ctx->problem, ELEMENTS * sizeof(ctx->solution[0]));
+    }
+
+    ctx->count++;
+    return;
+  }
+
+  mask = freedom[r];
+
   /* If we can't determine a cell value, see if set-oriented
    * backtracking provides a smaller branching factor.
    */
@@ -558,7 +391,7 @@ static void solve_recurse(struct solve_context *ctx, const set_t *freedom, int d
         memcpy(new_free, freedom, sizeof(new_free));
         freedom_eliminate(new_free, s % DIM, s / DIM, value);
         ctx->problem[s] = value;
-        solve_recurse(ctx, new_free, diff);
+        solve_recurse_sofa(ctx, new_free, diff);
         ctx->problem[s] = 0;
 
         if (ctx->count >= 2)
@@ -568,7 +401,6 @@ static void solve_recurse(struct solve_context *ctx, const set_t *freedom, int d
       return;
     }
   }
-#endif
 
   /* Otherwise, fall back to cell-oriented backtracking. */
   bf = count_bits(mask) - 1;
@@ -579,7 +411,7 @@ static void solve_recurse(struct solve_context *ctx, const set_t *freedom, int d
       memcpy(new_free, freedom, sizeof(new_free));
       freedom_eliminate(new_free, r % DIM, r / DIM, i + 1);
       ctx->problem[r] = i + 1;
-      solve_recurse(ctx, new_free, diff);
+      solve_recurse_sofa(ctx, new_free, diff);
 
       if (ctx->count >= 2)
         return;
@@ -588,7 +420,7 @@ static void solve_recurse(struct solve_context *ctx, const set_t *freedom, int d
   ctx->problem[r] = 0;
 }
 
-static int solve(const uint8_t *problem, uint8_t *solution, int *diff)
+static int solve(const uint8_t *problem, uint8_t *solution, int *diff, bool sofa)
 {
   struct solve_context ctx;
   set_t freedom[ELEMENTS];
@@ -602,7 +434,11 @@ static int solve(const uint8_t *problem, uint8_t *solution, int *diff)
   if (sanity_check(problem, freedom) < 0)
     return -1;
 
-  solve_recurse(&ctx, freedom, 0);
+  if (sofa) {
+    solve_recurse_sofa(&ctx, freedom, 0);
+  } else {
+    solve_recurse_no_sofa(&ctx, freedom, 0);
+  }
 
   /* Calculate a difficulty score */
   if (diff) {
@@ -822,14 +658,19 @@ static void choose_grid(uint8_t *grid)
  * the algorithm to wander for a few steps before starting again from the
  * best-so-far puzzle.
  */
+static int harden_puzzle(const uint8_t *solution, uint8_t *puzzle, int max_iter, int max_score, int target_score, bool sofa);
 
-static int harden_puzzle(const uint8_t *solution, uint8_t *puzzle,
-                         int max_iter, int max_score, int target_score)
+void db_harden_puzzle(const uint8_t* solution, uint8_t* puzzle, uint32_t* difficultyp, int max_iter, int max_difficulty, int target_difficulty, bool sofa){
+  *difficultyp = harden_puzzle(solution, puzzle, max_iter, max_difficulty, target_difficulty, sofa);
+  return;
+}
+
+static int harden_puzzle(const uint8_t *solution, uint8_t *puzzle, int max_iter, int max_score, int target_score, bool sofa)
 {
   int best = 0;
   int i;
 
-  solve(puzzle, NULL, &best);
+  solve(puzzle, NULL, &best, sofa);
 
   for (i = 0; i < max_iter; i++) {
     uint8_t next[ELEMENTS];
@@ -851,7 +692,7 @@ static int harden_puzzle(const uint8_t *solution, uint8_t *puzzle,
         next[ELEMENTS - c - 1] = 0;
       }
 
-      if (!solve(next, NULL, &s) &&
+      if (!solve(next, NULL, &s, sofa) &&
           s > best && (s <= max_score || max_score < 0)) {
         memcpy(puzzle, next, sizeof(puzzle[0]) * ELEMENTS);
         best = s;
@@ -867,319 +708,17 @@ static int harden_puzzle(const uint8_t *solution, uint8_t *puzzle,
   return best;
 }
 
-/************************************************************************
- * Command-line user interface
- */
-
-struct options {
-  int               dump;
-  int               max_iter;
-  int               target_diff;
-  int               max_diff;
-  const struct gridline_def *gl_def;
-  const char            *action;
-};
-
-static void usage(const char *progname)
-{
-  printf("usage: %s [options] <action>\n\n"
-         "Options may be any of the following:\n"
-         "    -i <iterations>    Maximum iterations for puzzle generation.\n"
-         "    -m <score>         Maximum difficulty for puzzle generation.\n"
-         "    -t <score>         Target difficulty for puzzle generation.\n"
-         "    -u                 Use UTF-8 line-drawing characters.\n"
-         "    -a                 Use ASCII line-drawing characters.\n"
-         "    -d                 Dump generated puzzle to a file.\n"
-         "\n"
-         "Action should be one of:\n"
-         "    solve              Read a grid from stdin and solve it.\n"
-         "    examine            Read a grid and estimate the difficulty.\n"
-         "    print              Read a grid and reformat it.\n"
-         "    generate           Generate and print a new puzzle.\n"
-         "    harden             Read an existing puzzle and make it harder.\n"
-         "    gen-grid           Generate a valid grid.\n", progname);
-}
-
-static void version(void)
-{
-  printf(
-         "Sudoku puzzle generator, 10 Jun 2011\n"
-         "Copyright (C) 2011 Daniel Beer <dlbeer@gmail.com>\n"
-         "\n"
-         "Permission to use, copy, modify, and/or distribute this software for any\n"
-         "purpose with or without fee is hereby granted, provided that the above\n"
-         "copyright notice and this permission notice appear in all copies.\n"
-         "\n"
-         "THE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\n"
-         "WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\n"
-         "MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\n"
-         "ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\n"
-         "WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\n"
-         "ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\n"
-         "OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.\n");
-}
-
-static int parse_options(int argc, char **argv, struct options *o)
-{
-  const static struct option longopts[] = {
-                                           {"help", 0, 0, 'H'},
-                                           {"version",  0, 0, 'V'},
-                                           {NULL, 0, 0, 0}
-  };
-  int i;
-
-  memset(o, 0, sizeof(*o));
-#if ORDER <= 3
-  o->max_iter = 200;
-#else
-  o->max_iter = 20;
-#endif
-  o->target_diff = -1;
-  o->max_diff = -1;
-  o->dump = 0;
-
-  while ((i = getopt_long(argc, argv, "i:t:m:uad", longopts, NULL)) >= 0)
-    switch (i) {
-    case 'i':
-      o->max_iter = atoi(optarg);
-      break;
-
-    case 'd':
-      o->dump = 1;
-      break;
-
-    case 't':
-      o->target_diff = atoi(optarg);
-      break;
-
-    case 'm':
-      o->max_diff = atoi(optarg);
-      break;
-
-    case 'u':
-      o->gl_def = &utf8_def;
-      break;
-
-    case 'a':
-      o->gl_def = &ascii_def;
-      break;
-
-    case 'H':
-      usage(argv[0]);
-      exit(0);
-      break;
-
-    case 'V':
-      version();
-      exit(0);
-
-    case '?':
-      fprintf(stderr, "Try --help for usage "
-              "information.\n");
-      return -1;
-    }
-
-  argc -= optind;
-  argv += optind;
-
-  if (argc < 1) {
-    version();
-    printf("\n");
-    fprintf(stderr, "You need to specify an action. "
-            "Try --help.\n");
-    return -1;
-  }
-
-  o->action = argv[0];
-  return 0;
-}
-
-
-static void print_grid_opt(const struct options *o, const uint8_t *grid)
-{
-  if (o->gl_def)
-    print_grid_pretty(o->gl_def, grid);
-  else
-    print_grid(grid);
-}
-
-static int action_se(const struct options *o)
-{
+void db_generate_puzzle(uint8_t* puzzle, uint32_t* difficultyp, uint32_t difficulty, int32_t max_difficulty, uint32_t iterations, bool sofa){
   uint8_t grid[ELEMENTS];
-  uint8_t solution[ELEMENTS];
-  int diff;
-  int r;
-
-  if (read_grid(grid) < 0)
-    return -1;
-
-  r = solve(grid, solution, &diff);
-  if (r < 0) {
-    printf("Grid is unsolvable\n");
-    return -1;
-  }
-
-  if (*o->action == 's' || *o->action == 'S') {
-    print_grid_opt(o, solution);
-    printf("\n");
-  }
-
-  if (r > 0) {
-    printf("Solution is not unique\n");
-    return -1;
-  }
-
-  printf("Unique solution. Difficulty: %d\n", diff);
-  return 0;
-}
-
-static int action_print(const struct options *o)
-{
-  uint8_t grid[ELEMENTS];
-
-  if (read_grid(grid) < 0)
-    return -1;
-
-  print_grid_opt(o, grid);
-  return 0;
-}
-
-static int action_gen_grid(const struct options *o)
-{
-  uint8_t grid[ELEMENTS];
-
-  choose_grid(grid);
-  print_grid_opt(o, grid);
-  return 0;
-}
-
-static int action_harden(const struct options *o)
-{
-  uint8_t solution[ELEMENTS];
-  uint8_t grid[ELEMENTS];
-  int r;
-  int old_diff;
-  int new_diff;
-
-  if (read_grid(grid) < 0)
-    return -1;
-
-  r = solve(grid, solution, &old_diff);
-  if (r < 0) {
-    printf("Grid is unsolvable\n");
-    return -1;
-  }
-
-  if (r)
-    memcpy(grid, solution, sizeof(grid[0]) * ELEMENTS);
-
-  new_diff = harden_puzzle(solution, grid, o->max_iter,
-                           o->max_diff, o->target_diff);
-
-  print_grid_opt(o, grid);
-  printf("\nDifficulty: %d\n", new_diff);
-
-  if (r)
-    printf("Original puzzle was not uniquely solvable\n");
-  else
-    printf("Original difficulty: %d\n", old_diff);
-
-  return 0;
-}
-
-/*
- * dumps the puzzle out to a file called "puzzle_diff_datestring.puzzle"
- * in the SudokuSensei minimalistic format.
- */
-static void dump_puzzle(const uint8_t *puzzle, int diff)
-{
-  char pathbuffer[256] = {0};
-  char timebuffer[256] = {0};
-  time_t rawtime;
-  struct tm *ptm;
-  FILE* fp;
-
-  rawtime = time(NULL);
-  if (rawtime == -1) { return; }
-
-  ptm = localtime(&rawtime);
-
-  if (ptm == NULL) { return; }
-
-  strftime(timebuffer, 256, "%Y_%m_%d", ptm);
-
-  snprintf(pathbuffer, 256, "%d_%s.sudoku", diff, timebuffer);
-
-  fp = fopen(pathbuffer, "w");
-
-  if (fp == NULL){ return; }
-
-  grid2fp(fp, puzzle);
-
-  fclose(fp);
-
-  printf("\nSaved: %s\n", pathbuffer);
-
-}
-
-static int action_generate(const struct options *o)
-{
-  uint8_t puzzle[ELEMENTS];
-  uint8_t grid[ELEMENTS];
-  int i, diff, empty;
-
-  choose_grid(grid);
-  memcpy(puzzle, grid, ELEMENTS * sizeof(puzzle[0]));
-
-  diff = harden_puzzle(grid, puzzle, o->max_iter, o->max_diff, o->target_diff);
-  print_grid_opt(o, puzzle);
-
-  empty = 0;
-  for (i = 0; i < ELEMENTS; i++)
-    if (!puzzle[i])
-      empty++;
-
-
-  printf("\nDifficulty: %d  empty: %d\n", diff, empty);
-
-  if (o->dump) {
-    dump_puzzle(puzzle, diff);
-  }
-
-  return 0;
-}
-
-struct action {
-  const char    *name;
-  int       (*func)(const struct options *o);
-};
-
-static const struct action actions[] = {
-                                        {"solve",   action_se},
-                                        {"examine", action_se},
-                                        {"print",   action_print},
-                                        {"gen-grid",    action_gen_grid},
-                                        {"harden",  action_harden},
-                                        {"generate",    action_generate},
-                                        {NULL, NULL}
-};
-
-int main(int argc, char **argv)
-{
-  struct options o;
-  const struct action *a = actions;
-
-  if (parse_options(argc, argv, &o) < 0)
-    return -1;
-
-  while (a->name && strcasecmp(o.action, a->name))
-    a++;
-
-  if (!a->name) {
-    fprintf(stderr, "Unknown action: %s. Try --help.\n", o.action);
-    return -1;
-  }
 
   srandom(time(NULL));
-  return a->func(&o);
+
+  choose_grid(grid);
+
+  memcpy(puzzle, grid, ELEMENTS * sizeof(uint8_t));
+
+  *difficultyp = harden_puzzle(grid, puzzle, iterations, max_difficulty, difficulty, sofa);
+
+  return;
+
 }
