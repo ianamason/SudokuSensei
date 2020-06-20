@@ -243,7 +243,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
             self.canvas.focus_set()
             # get row and col numbers from x,y coordinates
             row, col = (y - MARGIN) // SIDE, (x - MARGIN) // SIDE
-            # if cell was selected already - deselect it
+            ## if cell was selected already - deselect it
             if (row, col) == (self.row, self.col):
                 self.row, self.col = -1, -1
             #iam: the elif choice makes an original entry permanent.
@@ -259,6 +259,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
     def __handle_input(self, val):
         if val == 0:
             self.game.puzzle.erase_cell(self.row, self.col)
+            return
         notes = self.notes[(self.row, self.col)]
         if len(notes) != 0:
             if val in notes:
@@ -295,7 +296,8 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
             self.__handle_input(int(event.char))
         else:
             return
-        self.col, self.row = -1, -1
+        #iam: now that we can make notes this is not what we want...
+        #self.col, self.row = -1, -1
         self.__draw_puzzle()
         self.__draw_cursor()
         if self.game.check_win():
@@ -380,9 +382,9 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
             self.message_text.set(f'The current difficulty metric is: {diff} and {empty_cells} empty cells remaining.')
 
     def __check_puzzle(self):
-        status = self.game.check()
+        status, wrong = self.game.check()
         if status:
             empty_cells = self.game.get_empty_cell_count()
             self.message_text.set(f'Everything seems OK, there are {empty_cells} left.')
         else:
-            self.message_text.set('Something is wrong!')
+            self.message_text.set(f'These cells are wrong {wrong}!')

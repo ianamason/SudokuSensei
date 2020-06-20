@@ -62,6 +62,23 @@ def loadSugen():
 
 loadSugen()
 
+def make_puzzle_array(pyarray):
+    """Makes a C term array object from a python array object"""
+    assert len(pyarray) == 81
+    retval = None
+    if pyarray is not None:
+        #weird python and ctype magic
+        retval = (c_uint8 * len(pyarray))(*pyarray)
+    return retval
+
+def make_uint32_array(pyarray):
+    """Makes a C uint32 array object from a python array object"""
+    retval = None
+    if pyarray is not None:
+        #weird python and ctype magic
+        retval = (c_uint32 * len(pyarray))(*pyarray)
+    return retval
+
 
 #void db_generate_puzzle(uint8_t* puzzle, uint32_t* difficultyp, uint32_t difficulty, uint32_t max_difficulty, uint32_t iterations, bool sofa);
 
@@ -71,4 +88,8 @@ libsugen.db_solve_puzzle.restype = c_int32
 libsugen.db_solve_puzzle.argtypes = [POINTER(c_uint8), POINTER(c_uint8), POINTER(c_uint32), c_bool]
 def solve_puzzle(puzzle, solution, difficultyp, sofa):
     """call's daniel beer's puzzle solver, both solution and difficultyp can be NULL."""
-    return libsugen.db_solve_puzzle(puzzle, solution, difficultyp, sofa)
+    cpuzzle = make_puzzle_array(puzzle)
+    csolution = make_puzzle_array(solution) if solution is not None else None
+    assert len(difficultyp) == 1
+    cdifficultyp = make_uint32_array(difficultyp)
+    return libsugen.db_solve_puzzle(cpuzzle, csolution, cdifficultyp, sofa)

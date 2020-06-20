@@ -11,7 +11,7 @@
 # All changes are recorded in the git commits.
 #
 
-from .SudokuLib import Puzzle
+from .SudokuLib import Puzzle, SudokuError
 from .SudokuSolver import SudokuSolver
 from .SudokuGenerator import SudokuGenerator, solve
 
@@ -72,8 +72,23 @@ class SudokuGame:
         return -1
 
     def check(self):
-        """Do a quick check that thepuzzle is still solvable (i.e. we haven't goofed."""
-        return solve(self.puzzle, None, None) == 0
+        """Do a quick check that the puzzle is still solvable (i.e. we haven't goofed).
+        If it is we return (True, None), otherwise we return (False, wrong) where
+        wrong is the non None cells in puzzle that disagree with the solution.
+        """
+        if solve(self.puzzle, None, None) == 0:
+            return (True, None)
+        solution = Puzzle()
+        if solve(self.start_puzzle, solution, None) == 0:
+            wrong = []
+            for row in range(9):
+                for col in range(8):
+                    if self.start_puzzle.get_cell(row, col) is None:
+                        current = self.puzzle.get_cell(row, col)
+                        if current is not None and current != solution.get_cell(row, col):
+                            wrong.append((row, col))
+            return (False, wrong)
+        raise SudokuError("The starting puzzle is not solvable!")
 
     def sanity_check(self):
         """this is for debugging, we check that all our data structures make sense."""

@@ -69,13 +69,30 @@ def clear_cell_map(cm):
         for col in range(9):
             cm[(row, col)].clear()
 
-
 def make_value_map():
     """constructs an initially empty mapping from values to cells."""
     v2c = {}
     for val in range(1, 10):
         v2c[val] = set()
     return v2c
+
+
+def puzzle2pyarray(puzzle):
+    """flattens a puzzle to an array of length 81."""
+    retval = []
+    matrix = puzzle.grid
+    for row in range(9):
+        retval.extend(matrix[row])
+    return retval
+
+def pyarray2puzzle(pyarray):
+    """creates a puzzle from pyarray of length 81."""
+    assert (len(pyarray)) == 81
+    matrix = make_grid()
+    for row in range(9):
+        for col in range(9):
+            matrix[row][col] = pyarray[9 * row + col]
+    return Puzzle(matrix)
 
 class Freedom:
     """Represents simple freedom analysis of a puzzle.
