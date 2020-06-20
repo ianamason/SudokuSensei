@@ -4,7 +4,7 @@ from yices import Census, Context, Model, Terms, Status, Yices
 
 from .SudokuLib import Puzzle, Syntax, Cores
 
-from .Constants import ALEPH_NOUGHT
+from .Constants import DEBUG, ALEPH_NOUGHT
 
 
 class SudokuSolver:
@@ -71,28 +71,30 @@ class SudokuSolver:
             raise Exception(f'Index error: {i} {j} {val}')
         ctx.assert_formula(self._inequality(i, j, val))
 
-    def assert_puzzle(self, ctx):
+    def assert_puzzle(self, ctx, puzzle):
         """Adds the diagram gleaned from the current state of the puzzle."""
-        diagram = self.syntax.diagram(self.game.puzzle)
+        diagram = self.syntax.diagram(puzzle)
         ctx.assert_formulas(diagram)
 
-    def assert_puzzle_except(self, ctx, row, col, ans):
+    def assert_puzzle_except(self, ctx, puzzle, row, col, ans):
         """Adds the diagram, with the single given exception, of the current state of the puzzle."""
-        assert ans == self.game.puzzle.get_cell(row, col)
+        assert ans == puzzle.get_cell(row, col)
         terms = []
         for i in range(9):
             for j in range(9):
                 if i != row and j != col:
-                    val = self.game.puzzle.get_cell(i, j)
+                    val = puzzle.get_cell(i, j)
                     if val is not None:
                         terms.append(self._equality(i, j, val))
         ctx.assert_formulas(terms)
 
-    def solve(self):
+    def solve(self, puzzle=None):
         """Attempts to solve the puzzle, returning either None if there is no solution, or a board with the correct MISSING entries."""
+        if puzzle is None:
+            puzzle = self.game.puzzle
         solution = None
         context = Context()
-        self.assert_puzzle(context)
+        self.assert_puzzle(context, puzzle)
         self.assert_rules(context)
         smt_stat = context.check_context(None)
         if smt_stat != Status.SAT:
@@ -138,11 +140,15 @@ class SudokuSolver:
             return Terms.yand(termlist)
         result = 0
         context = Context()
-        self.assert_puzzle(context)
+        self.assert_puzzle(context, self.game.puzzle)
         self.assert_rules(context)
         while  context.check_context(None) == Status.SAT:
             model = Model.from_context(context, 1)
             diagram = model2term(model)
+            if DEBUG:
+                print(f'\nModel #{result + 1}:')
+                puzzle = self.puzzle_from_model(model, True)
+                puzzle.pprint()
             context.assert_formula(Terms.ynot(diagram))
             model.dispose()
             result += 1
@@ -186,7 +192,7 @@ class SudokuSolver:
         if not (0 <= i <= 8 and 0 <= j <= 8 and 1 <= val <= 9):
             raise Exception(f'Index error: {i} {j} {val}')
         context = Context()
-        self.assert_puzzle(context)
+        self.assert_puzzle(context, self.game.puzzle)
         self.assert_not_value(context, i, j, val)
         self.assert_trivial_rules(context)
         smt_stat = context.check_context_with_assumptions(None, self.duplicate_rules)
@@ -209,7 +215,7 @@ class SudokuSolver:
         """given a core, removes every unnecessary member until it has a minimal core."""
         i, j, val, terms = core
         context = Context()
-        self.assert_puzzle(context)
+        self.assert_puzzle(context, self.game.puzzle)
         self.assert_not_value(context, i, j, val)
         self.assert_trivial_rules(context)
         filtered = terms.copy()
@@ -228,7 +234,7 @@ class SudokuSolver:
         The context has already been informed of the rules.
         """
         ctx.push()
-        self.assert_puzzle_except(ctx, i, j, val)
+        self.assert_puzzle_except(ctx, self.game.puzzle, i, j, val)
         self.assert_not_value(ctx, i, j, val)
         smt_stat = ctx.check_context(None)
         ctx.pop()

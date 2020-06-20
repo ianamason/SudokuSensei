@@ -76,19 +76,20 @@ class SudokuGame:
         If it is we return (True, None), otherwise we return (False, wrong) where
         wrong is the non None cells in puzzle that disagree with the solution.
         """
-        if solve(self.puzzle, None, None) == 0:
+        solution = self.solver.solve()
+        if solution is not None:
             return (True, None)
-        solution = Puzzle()
-        if solve(self.start_puzzle, solution, None) == 0:
-            wrong = []
-            for row in range(9):
-                for col in range(8):
-                    if self.start_puzzle.get_cell(row, col) is None:
-                        current = self.puzzle.get_cell(row, col)
-                        if current is not None and current != solution.get_cell(row, col):
-                            wrong.append((row, col))
-            return (False, wrong)
-        raise SudokuError("The starting puzzle is not solvable!")
+        solution = self.solver.solve(self.start_puzzle)
+        if solution is None:
+            raise SudokuError("The starting puzzle is not solvable!")
+        wrong = []
+        for row in range(9):
+            for col in range(8):
+                if self.start_puzzle.get_cell(row, col) is None:
+                    current = self.puzzle.get_cell(row, col)
+                    if current is not None and current != solution.get_cell(row, col):
+                        wrong.append((row, col))
+        return (False, wrong)
 
     def sanity_check(self):
         """this is for debugging, we check that all our data structures make sense."""
