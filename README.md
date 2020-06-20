@@ -38,8 +38,8 @@ For example:
 ```
 sudokusensei --board  sofa
 ```
-will start you off with the puzzle that Daniel Beer mentions in showing the difference in difficulty 
-between sofa and non-sofa search.
+will start you off with the puzzle that Daniel Beer (@dlbeer) mentions in showing the difference in difficulty 
+between sofa and non-sofa search, see the references below.
 
 Once you have the puppy up for can always generate new puzzles.  I will slowly make the UI more user friendly,
 but at the moment I am more interested in generating hard puzzles, and accurately estimating their difficulty.
