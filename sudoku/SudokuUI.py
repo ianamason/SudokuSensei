@@ -163,8 +163,11 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
             return
         x = MARGIN + col * SIDE
         y = MARGIN + row * SIDE
-        font = SudokuUI.note_font_a if count < 4 else SudokuUI.note_font_b
-        self.canvas.create_text(x + 2 * delta, y + 2 * delta, text='12', tags='notes', fill='grey', font=font)
+        font = SudokuUI.note_font_a if count < 4 else SudokuUI.note_font_b if count < 7 else SudokuUI.note_font_c
+        elements = list(contents)
+        elements.sort()
+        text = ''.join([str(e) for e in elements])
+        self.canvas.create_text(x + 2 * delta, y + 2 * delta, text=text, tags='notes', fill='grey', font=font)
 
     def __draw_free(self, row, col, free):
         x = MARGIN + col * SIDE
@@ -236,10 +239,8 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         x, y = event.x, event.y
         if MARGIN < x < WIDTH - MARGIN and MARGIN < y < HEIGHT - MARGIN:
             self.canvas.focus_set()
-
             # get row and col numbers from x,y coordinates
             row, col = (y - MARGIN) // SIDE, (x - MARGIN) // SIDE
-
             # if cell was selected already - deselect it
             if (row, col) == (self.row, self.col):
                 self.row, self.col = -1, -1
@@ -253,19 +254,43 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
 
         self.__draw_cursor()
 
+    def __handle_input(self, val):
+        if val == 0:
+            self.game.puzzle.erase_cell(self.row, self.col)
+        notes = self.notes[(self.row, self.col)]
+        if len(notes) != 0:
+            if val in notes:
+                notes.remove(val)
+                if len(notes) == 1:
+                    last = list(notes)[0]
+                    notes.remove(last)
+                    self.game.puzzle.set_cell(self.row, self.col, last)
+            else:
+                notes.add(val)
+        else:
+            oval = self.game.puzzle.get_cell(self.row, self.col)
+            if oval is None:
+                self.game.puzzle.set_cell(self.row, self.col, val)
+                return
+            if oval != val:
+                notes.add(oval)
+                notes.add(val)
+                self.game.puzzle.erase_cell(self.row, self.col)
+
+
     def __key_pressed(self, event):
         if self.game.game_over:
             return
         if self.row < 0 or self.col < 0:
             return
         if event.keysym == "BackSpace":
-            self.game.puzzle.erase_cell(self.row, self.col)
-        elif event.char in '1234567890':
-            val = int(event.char)
-            if val == 0:
+            notes = self.notes[(self.row, self.col)]
+            if len(notes) == 0:
                 self.game.puzzle.erase_cell(self.row, self.col)
             else:
-                self.game.puzzle.set_cell(self.row, self.col, val)
+                notes.clear()
+        elif event.char in '1234567890':
+            self.__handle_input(int(event.char))
         else:
             return
         self.col, self.row = -1, -1
