@@ -38,8 +38,15 @@ For example:
 ```
 sudokusensei --board  sofa
 ```
-will start you off with the puzzle that Daniel Beer (@dlbeer) mentions in showing the difference in difficulty 
+will start you off with the puzzle that Daniel Beer (@dlbeer) mentions in showing the difference in difficulty
 between sofa and non-sofa search, see the references below.
+
+Another example would be
+```
+sudokusensei --board  hardest
+```
+which will start you off with the puzzle that Finnish mathematician Arto Inkala
+[claimed](https://www.conceptispuzzles.com/index.aspx?uri=info/article/424) is the hardest one possible.
 
 Once you have the puppy up for can always generate new puzzles.  I will slowly make the UI more user friendly,
 but at the moment I am more interested in generating hard puzzles, and accurately estimating their difficulty.

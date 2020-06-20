@@ -1,3 +1,5 @@
+[![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-blueviolet.svg)](https://creativecommons.org/licenses/by/4.0/)
+
 SudukoSensei
 ============
 
@@ -28,36 +30,56 @@ pip install yices
 
 ```
 
+You need a newish Python, I use the new format strings, so you will need at least 3.6.
+
 # Usage
 =======
 
-So not a lot of brain power was spent making this a watertight work. But if you start of with an empty board
+There is a make file that will build and install the package. Once installed, you start of with an empty board
 
 ```
 
-./sudokusolver
+sudokusensei
 
 ```
 
-you can add entries one by one, and then solve. Clear the solution and continue to add entries. Or if you wish you
+There are a collection of predefined boards in the  `data <https://github.com/ianamason/SudokuSensei/tree/master/sudoku/data>`_ directory,
 
-can clear the entries too.  There are a couple of built in boards, so you can start from one like so:
-
-```
-
-./sudokusolver --board debug
-
-./sudokusolver --board n00b
-
-./sudokusolver --board l33t
+and you can launch one othe these via
 
 ```
 
-add a few entries and then solve. Seems like the `l33t` board has 158 solutions, which I think means it is not a
+sudokusensei --board <board base name>
 
-legal puzzle.
+```
 
-You can also ask for the number of solutions, but if there are more than 64 we do not persist, and just return 64.
+For example:
+
+```
+
+sudokusensei --board  sofa
+
+```
+
+will start you off with the puzzle that Daniel Beer (@dlbeer) mentions in showing the difference in difficulty
+
+between sofa and non-sofa search, see the references below.
+
+Another example would be
+
+```
+
+sudokusensei --board  hardest
+
+```
+
+which will start you off with the puzzle that Finnish mathematician Arto Inkala
+
+[claimed](https://www.conceptispuzzles.com/index.aspx?uri=info/article/424) is the hardest one possible.
+
+Once you have the puppy up for can always generate new puzzles.  I will slowly make the UI more user friendly,
+
+but at the moment I am more interested in generating hard puzzles, and accurately estimating their difficulty.
 
 # Acknowledgments
 =================
@@ -66,5 +88,16 @@ This project was built on top of the nice python `tutorial](http://newcoder.io/g
 
 who is hereby thanked. The tutorial is under the creative commons `license <https://creativecommons.org/licenses/by-sa/3.0/deed.en_US>`_ which does
 
-not appear to be an option in GitHub's license widget, so if this is a problem let me know.
+not appear to be an option in GitHub's license widget, consequently I choose the nearest one I could, if this is a problem let me know.
+
+
+# References
+============
+
+
+* `The Math behind Sudoku <http://pi.math.cornell.edu/~mec/Summer2009/Mahmood/Intro.html>`_
+
+* `Graphical User Interfaces <http://newcoder.io/gui/>`_
+
+* `Generating difficult Sudoku puzzles quickly <https://dlbeer.co.nz/articles/sudoku.html>`_
 
