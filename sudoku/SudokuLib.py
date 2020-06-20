@@ -63,6 +63,13 @@ def make_cell_map():
             cell_map[(row, col)] = set()
     return cell_map
 
+def clear_cell_map(cm):
+    """resets a cell map so that it is empty."""
+    for row in range(9):
+        for col in range(9):
+            cm[(row, col)].clear()
+
+
 def make_value_map():
     """constructs an initially empty mapping from values to cells."""
     v2c = {}

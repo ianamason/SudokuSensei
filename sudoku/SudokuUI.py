@@ -17,7 +17,7 @@ from tkinter import messagebox
 
 from .Constants import DEBUG, TITLE, WIDTH, HEIGHT, PAD, MARGIN, SIDE, ALEPH_NOUGHT
 
-from .SudokuLib import make_cell_map
+from .SudokuLib import make_cell_map, clear_cell_map
 
 delta = SIDE / 4
 
@@ -61,7 +61,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         self.messagebox.pack(side="top", fill="both", pady=2*PAD, expand=True)
 
         self.clear_var = tk.StringVar(parent)
-        self.clear_choices = ['', 'Freedom', 'Puzzle', 'Solution']
+        self.clear_choices = ['', 'Freedom', 'Notes', 'Puzzle', 'Solution']
         self.clear_var.set('')
         self.clear_var.trace(callback=self.__dispatch_clear_choice, mode='w')
 
@@ -129,7 +129,9 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         desire = self.clear_var.get()
         if desire == 'Freedom':
             self.freedom = None
-        if desire == 'Puzzle':
+        elif desire == 'Notes':
+            clear_cell_map(self.notes)
+        elif desire == 'Puzzle':
             self.__clear_puzzle()
         elif desire == 'Solution':
             self.__clear_solution()
