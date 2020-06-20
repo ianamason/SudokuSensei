@@ -23,23 +23,26 @@ pip install yices
 ```
 You need a newish Python, I use the new format strings, so you will need at least 3.6.
 
-## Usage (out of date)
+## Usage
 
-So not a lot of brain power was spent making this a watertight work. But if you start of with an empty board
+There is a make file that will build and install the package. Once installed, you start of with an empty board
 ```
-./sudokusolver
+sudokusensei
 ```
-you can add entries one by one, and then solve. Clear the solution and continue to add entries. Or if you wish you
-can clear the entries too.  There are a couple of built in boards, so you can start from one like so:
+There are a collection of predefined boards in the  [data](https://github.com/ianamason/SudokuSensei/tree/master/sudoku/data) directory,
+and you can launch one othe these via
 ```
-./sudokusolver --board debug
-./sudokusolver --board n00b
-./sudokusolver --board l33t
+sudokusensei --board <board base name>
 ```
-add a few entries and then solve. Seems like the `l33t` board has 158 solutions, which I think means it is not a
-legal puzzle.
+For example:
+```
+sudokusensei --board  sofa
+```
+will start you off with the puzzle that Daniel Beer mentions in showing the difference in difficulty 
+between sofa and non-sofa search.
 
-You can also ask for the number of solutions, but if there are more than 64 we do not persist, and just return 64.
+Once you have the puppy up for can always generate new puzzles.  I will slowly make the UI more user friendly,
+but at the moment I am more interested in generating hard puzzles, and accurately estimating their difficulty.
 
 ## Acknowledgments
 
@@ -55,8 +58,4 @@ not appear to be an option in GitHub's license widget, consequently I choose the
 
 * [Graphical User Interfaces](http://newcoder.io/gui/)
 
-* [Arel's Sudoku Generator](https://github.com/arel/arels-sudoku-generator.git)
-
 * [Generating difficult Sudoku puzzles quickly](https://dlbeer.co.nz/articles/sudoku.html)
-
-* [Norvig's Sudoku Page](http://norvig.com/sudoku.html)
