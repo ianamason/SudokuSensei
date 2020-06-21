@@ -66,7 +66,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         self.clear_var.trace(callback=self.__dispatch_clear_choice, mode='w')
 
         self.show_var = tk.StringVar(parent)
-        self.show_choices = ['', 'Least Free', 'Hint', '# Solutions', 'Freedom', 'Difficulty', 'Sofa', 'Sanity Check']
+        self.show_choices = ['', 'Least Free', 'Hint', '# Solutions', 'Freedom', 'Difficulty', 'Sofa', 'Freedom Notes', 'Sanity Check']
         self.show_var.set('')
         self.show_var.trace(callback=self.__dispatch_show_choice, mode='w')
 
@@ -118,6 +118,8 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
             self.__show_difficulty()
         elif desire == 'Sofa':
             self.__show_sofa()
+        elif desire == 'Freedom Notes':
+            self.__show_freedom_notes()
         elif desire == 'Sanity Check':
             self.__sanity_check()
         else:
@@ -368,6 +370,15 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
     def __show_sofa(self):
         self.game.puzzle.dump_value_map()
         self.game.puzzle.freedom.dump_sofa(self.game.puzzle)
+
+    def __show_freedom_notes(self):
+        freedom = self.game.puzzle.freedom
+        clear_cell_map(self.notes)
+        for row in range(9):
+            for col in range(9):
+                if self.game.puzzle.get_cell(row, col) is None:
+                    self.notes[(row, col)].update(freedom.freedom_set(row, col))
+        self.__draw_puzzle()
 
     def __sanity_check(self):
         self.game.sanity_check()
