@@ -73,7 +73,7 @@ sudokusensei --board  hardest
 
 ```
 
-which will start you off with the puzzle that Finnish mathematician Arto Inkala
+which will start you off with the puzzle that Finnish mathematician `Arto Inkala <http://www.aisudoku.com/index_en.html>`_
 
 [claimed](https://www.conceptispuzzles.com/index.aspx?uri=info/article/424) is the hardest one possible.
 
