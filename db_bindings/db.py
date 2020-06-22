@@ -188,8 +188,14 @@ def test_generate():
 
 def main():
     """test the bindings."""
-    test_solve()
-    test_generate()
+    if False:
+        test_solve()
+        test_generate()
+
+    for i in range(10):
+        sofa_difficulty, puzzle = generate_puzzle(700, True, iterations=1000)
+        no_sofa_difficulty, solution = solve_puzzle(puzzle, False)
+        print(f'{no_sofa_difficulty}  {sofa_difficulty}   {puzzle.empty_cells}')
 
 if __name__ == '__main__':
     main()

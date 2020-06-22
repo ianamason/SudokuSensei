@@ -31,6 +31,10 @@
 #define DIM     (ORDER * ORDER)
 #define ELEMENTS    (DIM * DIM)
 
+
+static bool verbose = false;
+static bool initialized = false;
+
 /************************************************************************
  * Cell freedom analysis.
  *
@@ -452,7 +456,8 @@ static int32_t solve(const uint8_t *problem, uint8_t *solution, uint32_t *diff, 
 
     *diff = ctx.branch_score * mult + empty;
 
-    printf("solver (sofa=%d) returns %d diff %d empty %d\n", sofa, ctx.count - 1, diff ? *diff : 0, empty);
+    if (verbose)
+      printf("solver (sofa=%d) returns %d diff %d empty %d\n", sofa, ctx.count - 1, diff ? *diff : 0, empty);
 
   }
 
@@ -667,7 +672,8 @@ static int harden_puzzle(const uint8_t *solution, uint8_t *puzzle, int max_iter,
     uint8_t next[ELEMENTS];
     int j;
 
-    printf("\tIteration: %d   %d\n", i, best);
+    if (verbose)
+      printf("\tIteration: %d   %d\n", i, best);
 
     memcpy(next, puzzle, sizeof(next));
 
@@ -689,13 +695,15 @@ static int harden_puzzle(const uint8_t *solution, uint8_t *puzzle, int max_iter,
         best = s;
 
         if (target_score >= 0 && s >= target_score) {
-          printf("iteration: %d\n", i);
+          if (verbose)
+            printf("iteration: %d\n", i);
           return best;
         }
       }
     }
   }
-  printf("iteration: %d\n", max_iter);
+  if (verbose)
+    printf("iteration: %d\n", max_iter);
   return best;
 }
 
@@ -712,7 +720,10 @@ int32_t db_solve_puzzle(const uint8_t* puzzle, uint8_t* solution, uint32_t* diff
 
 void db_generate_puzzle(uint8_t* puzzle, uint32_t* difficultyp, uint32_t difficulty, int32_t max_difficulty, uint32_t iterations, bool sofa){
   uint8_t grid[ELEMENTS];
-  srandom(time(NULL));
+  if (!initialized) {
+    initialized = true;
+    srandom(time(NULL));
+  }
   choose_grid(grid);
   memcpy(puzzle, grid, ELEMENTS * sizeof(uint8_t));
   *difficultyp = harden_puzzle(grid, puzzle, iterations, max_difficulty, difficulty, sofa);
