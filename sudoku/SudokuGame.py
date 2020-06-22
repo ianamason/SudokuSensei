@@ -20,9 +20,9 @@ class SudokuGame:
     A Sudoku game, in charge of storing the state of the board and checking
     whether the puzzle is completed.
     """
-    def __init__(self, board_file):
-        self.board_file = board_file
-        self.start_puzzle = Puzzle.path2puzzle(board_file)
+    def __init__(self, board_name):
+        self.board_name = board_name
+        self.start_puzzle = Puzzle.resource2puzzle(board_name)
         self.game_over = False
         # puzzle extends start_puzzle
         self.puzzle = None

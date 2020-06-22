@@ -7,7 +7,7 @@
  * puzzle should be big enough to accept 81 integers. The actual difficulty will
  * be placed in diff.
  */
-void db_generate_puzzle(uint8_t* puzzle, uint32_t* difficultyp, uint32_t difficulty, uint32_t max_difficulty, uint32_t iterations, bool sofa);
+void db_generate_puzzle(uint8_t* puzzle, uint32_t* difficultyp, uint32_t difficulty, int32_t max_difficulty, uint32_t iterations, bool sofa);
 
 
-int32_t db_solve_puzzle(uint8_t* puzzle, uint8_t* solution, uint32_t* difficultyp, bool sofa);
+int32_t db_solve_puzzle(const uint8_t* puzzle, uint8_t* solution, uint32_t* difficultyp, bool sofa);

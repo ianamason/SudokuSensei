@@ -31,11 +31,6 @@
 #define DIM     (ORDER * ORDER)
 #define ELEMENTS    (DIM * DIM)
 
-/*
-DON'T FORGET TO DO THIS IAN:
-
-*/
-
 /************************************************************************
  * Cell freedom analysis.
  *
@@ -62,9 +57,9 @@ typedef uint16_t set_t;
 #define SINGLETON(v) (1 << ((v) - 1))
 #define ALL_VALUES ((1 << DIM) - 1)
 
-static int count_bits(int x)
+static uint32_t count_bits(int x)
 {
-  int count = 0;
+  uint32_t count = 0;
 
   while (x) {
     x &= x - 1;
@@ -78,7 +73,7 @@ static void freedom_eliminate(set_t *freedom, int x, int y, int v)
 {
   set_t mask = ~SINGLETON(v);
   int b;
-  int i, j;
+  uint32_t i, j;
   set_t saved = freedom[y * DIM + x];
 
   b = x;
@@ -104,26 +99,26 @@ static void freedom_eliminate(set_t *freedom, int x, int y, int v)
 
 static void init_freedom(const uint8_t *problem, set_t *freedom)
 {
-  int x, y;
+  uint32_t x, y;
 
   for (x = 0; x < ELEMENTS; x++)
     freedom[x] = ALL_VALUES;
 
   for (y = 0; y < DIM; y++)
     for (x = 0; x < DIM; x++) {
-      int v = problem[y * DIM + x];
+      uint8_t v = problem[y * DIM + x];
 
       if (v)
         freedom_eliminate(freedom, x, y, v);
     }
 }
 
-static int sanity_check(const uint8_t *problem, const set_t *freedom)
+static uint32_t sanity_check(const uint8_t *problem, const set_t *freedom)
 {
-  int i;
+  uint32_t i;
 
   for (i = 0; i < ELEMENTS; i++) {
-    int v = problem[i];
+    uint8_t v = problem[i];
 
     if (v) {
       set_t f = freedom[i];
@@ -136,17 +131,17 @@ static int sanity_check(const uint8_t *problem, const set_t *freedom)
   return 0;
 }
 
-static int search_least_free(const uint8_t *problem, const set_t *freedom)
+static int32_t search_least_free(const uint8_t *problem, const set_t *freedom)
 {
-  int i;
-  int best_index = -1;
-  int best_score = -1;
+  uint32_t i;
+  int32_t best_index = -1;
+  int32_t best_score = -1;
 
   for (i = 0; i < ELEMENTS; i++) {
-    int v = problem[i];
+    uint8_t v = problem[i];
 
     if (!v) {
-      int score = count_bits(freedom[i]);
+      uint32_t score = count_bits(freedom[i]);
 
       if (best_score < 0 || score < best_score) {
         best_index = i;
@@ -181,16 +176,16 @@ struct sofa_context {
   const uint8_t     *grid;
   const set_t       *freedom;
 
-  int           best[DIM];
-  int           best_size;
-  int           best_value;
+  int32_t       best[DIM];
+  int32_t       best_size;
+  int32_t       best_value;
 };
 
-static void sofa_set(struct sofa_context *ctx, const int *set)
+static void sofa_set(struct sofa_context *ctx, const int32_t *set)
 {
-  int count[DIM];
-  int i;
-  int best = -1;
+  int32_t count[DIM];
+  int32_t i;
+  int32_t best = -1;
   set_t missing = ALL_VALUES;
 
   /* Find out what's missing from the set, and how many available
@@ -198,13 +193,13 @@ static void sofa_set(struct sofa_context *ctx, const int *set)
    */
   memset(count, 0, sizeof(count));
   for (i = 0; i < DIM; i++) {
-    int v = ctx->grid[set[i]];
+    uint8_t v = ctx->grid[set[i]];
 
     if (v) {
       missing &= ~SINGLETON(v);
     } else {
       set_t freedom = ctx->freedom[set[i]];
-      int j;
+      int32_t j;
 
       for (j = 0; j < DIM; j++)
         if (freedom & (1 << j))
@@ -224,7 +219,7 @@ static void sofa_set(struct sofa_context *ctx, const int *set)
 
   /* If it's better than anything we've found so far, save the result */
   if (ctx->best_size < 0 || count[best] < ctx->best_size) {
-    int j = 0;
+    int32_t j = 0;
     set_t mask = 1 << best;
 
     ctx->best_value = best + 1;
@@ -237,10 +232,10 @@ static void sofa_set(struct sofa_context *ctx, const int *set)
   }
 }
 
-static int sofa(const uint8_t *grid, const set_t *freedom, int *set, int *value)
+static int32_t sofa(const uint8_t *grid, const set_t *freedom, int32_t *set, int32_t *value)
 {
   struct sofa_context ctx;
-  int i;
+  int32_t i;
 
   memset(&ctx, 0, sizeof(ctx));
   ctx.grid = grid;
@@ -249,9 +244,9 @@ static int sofa(const uint8_t *grid, const set_t *freedom, int *set, int *value)
   ctx.best_value = -1;
 
   for (i = 0; i < DIM; i++) {
-    int b = (i / ORDER) * ORDER * DIM + (i % ORDER) * ORDER;
-    int set[DIM];
-    int j;
+    int32_t b = (i / ORDER) * ORDER * DIM + (i % ORDER) * ORDER;
+    int32_t set[DIM];
+    int32_t j;
 
     for (j = 0; j < DIM; j++)
       set[j] = j * DIM + i;
@@ -304,19 +299,19 @@ static int sofa(const uint8_t *grid, const set_t *freedom, int *set, int *value)
  */
 
 struct solve_context {
-  uint8_t       problem[ELEMENTS];
-  int       count;
-  uint8_t       *solution;
-  int       branch_score;
+  uint8_t  problem[ELEMENTS];
+  uint32_t count;
+  uint8_t  *solution;
+  uint32_t branch_score;
 };
 
-static void solve_recurse_no_sofa(struct solve_context *ctx, const set_t *freedom, int diff)
+static void solve_recurse_no_sofa(struct solve_context *ctx, const set_t *freedom, uint32_t diff)
 {
   set_t new_free[ELEMENTS];
   set_t mask;
-  int r;
-  int i;
-  int bf;
+  int32_t r;
+  uint32_t i;
+  uint32_t bf;
 
   r = search_least_free(ctx->problem, freedom);
   if (r < 0) {
@@ -349,13 +344,13 @@ static void solve_recurse_no_sofa(struct solve_context *ctx, const set_t *freedo
   ctx->problem[r] = 0;
 }
 
-static void solve_recurse_sofa(struct solve_context *ctx, const set_t *freedom, int diff)
+static void solve_recurse_sofa(struct solve_context *ctx, const set_t *freedom, uint32_t diff)
 {
   set_t new_free[ELEMENTS];
   set_t mask;
-  int r;
-  int i;
-  int bf;
+  int32_t r;
+  uint32_t i;
+  uint32_t bf;
 
   r = search_least_free(ctx->problem, freedom);
   if (r < 0) {
@@ -375,9 +370,9 @@ static void solve_recurse_sofa(struct solve_context *ctx, const set_t *freedom, 
    * backtracking provides a smaller branching factor.
    */
   if (mask & (mask - 1)) {
-    int set[DIM];
-    int value;
-    int size;
+    int32_t set[DIM];
+    int32_t value;
+    int32_t size;
 
     size = sofa(ctx->problem, freedom, set, &value);
     //iam: sofa set is smaller than |freedom[r]| ?
@@ -420,7 +415,9 @@ static void solve_recurse_sofa(struct solve_context *ctx, const set_t *freedom, 
   ctx->problem[r] = 0;
 }
 
-static int solve(const uint8_t *problem, uint8_t *solution, int *diff, bool sofa)
+
+
+static int32_t solve(const uint8_t *problem, uint8_t *solution, uint32_t *diff, bool sofa)
 {
   struct solve_context ctx;
   set_t freedom[ELEMENTS];
@@ -442,9 +439,9 @@ static int solve(const uint8_t *problem, uint8_t *solution, int *diff, bool sofa
 
   /* Calculate a difficulty score */
   if (diff) {
-    int empty = 0;
-    int mult = 1;
-    int i;
+    uint32_t empty = 0;
+    uint32_t mult = 1;
+    uint32_t i;
 
     for (i = 0; i < ELEMENTS; i++)
       if (!problem[i])
@@ -460,6 +457,10 @@ static int solve(const uint8_t *problem, uint8_t *solution, int *diff, bool sofa
   }
 
   return ctx.count - 1;
+}
+
+int32_t db_solve_puzzle(const uint8_t* puzzle, uint8_t* solution, uint32_t* difficultyp, bool sofa){
+  return solve(puzzle, solution, difficultyp, sofa);
 }
 
 /************************************************************************
@@ -661,7 +662,7 @@ static void choose_grid(uint8_t *grid)
 
 static int harden_puzzle(const uint8_t *solution, uint8_t *puzzle, int max_iter, int max_score, int target_score, bool sofa)
 {
-  int best = 0;
+  uint32_t best = 0;
   int i;
 
   solve(puzzle, NULL, &best, sofa);
@@ -676,7 +677,7 @@ static int harden_puzzle(const uint8_t *solution, uint8_t *puzzle, int max_iter,
 
     for (j = 0; j < DIM * 2; j++) {
       int c = random() % ELEMENTS;
-      int s;
+      uint32_t s;
 
       if (random() & 1) {
         next[c] = solution[c];

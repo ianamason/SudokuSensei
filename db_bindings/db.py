@@ -12,8 +12,8 @@ from ctypes import (
 )
 
 from ctypes.util import find_library
-
-DEBUG = True
+from sudoku.SudokuLib import SudokuError, Puzzle, puzzle2pyarray, pyarray2puzzle
+from sudoku.Constants import DEBUG
 
 def sugen_library_name():
     """attempts to guess the name of the sugen library."""
@@ -50,17 +50,14 @@ def loadSugen():
     """attempts to load the sugen library, relying on CDLL, and using /usr/local/lib as a backup plan."""
     global libsugenpath # pylint: disable=W0603
     global libsugen # pylint: disable=W0603
-    error_msg = "Sugen dynamic library not found."
-    if _loadSugenFromPath(None, libsugenpath):
-        return
-    if _loadSugenFromPath('/usr/local/lib', libsugenpath):
-        return
     if _loadSugenFromPath('./generator', libsugenpath):
-        return
-    # else we failed
-    raise Exception(error_msg)
+        return True
+    if _loadSugenFromPath(None, libsugenpath):
+        return True
+    if _loadSugenFromPath('/usr/local/lib', libsugenpath):
+        return True
+    return False
 
-loadSugen()
 
 def make_puzzle_array(pyarray):
     """Makes a C term array object from a python array object"""
@@ -80,6 +77,10 @@ def make_uint32_array(pyarray):
     return retval
 
 
+success = loadSugen()
+if not success:
+    raise SudokuError("Sugen dynamic library not found.")
+
 #void db_generate_puzzle(uint8_t* puzzle, uint32_t* difficultyp, uint32_t difficulty, uint32_t max_difficulty, uint32_t iterations, bool sofa);
 
 
@@ -88,8 +89,35 @@ libsugen.db_solve_puzzle.restype = c_int32
 libsugen.db_solve_puzzle.argtypes = [POINTER(c_uint8), POINTER(c_uint8), POINTER(c_uint32), c_bool]
 def solve_puzzle(puzzle, solution, difficultyp, sofa):
     """call's daniel beer's puzzle solver, both solution and difficultyp can be NULL."""
+    assert len(puzzle) == 81
+    assert solution is None or len(solution) == 81
+    assert difficultyp is None or len(difficultyp) == 1
     cpuzzle = make_puzzle_array(puzzle)
     csolution = make_puzzle_array(solution) if solution is not None else None
-    assert len(difficultyp) == 1
-    cdifficultyp = make_uint32_array(difficultyp)
-    return libsugen.db_solve_puzzle(cpuzzle, csolution, cdifficultyp, sofa)
+    cdifficultyp = make_uint32_array(difficultyp) if difficultyp is not None else None
+    retval = libsugen.db_solve_puzzle(cpuzzle, csolution, cdifficultyp, sofa)
+    if difficultyp is not None:
+        difficultyp[0] = cdifficultyp[0]
+    if retval == 0 and solution is not None:
+        for cell in range(81):
+            solution[cell] = csolution[cell]
+    return retval
+
+
+def main():
+    """test harness for the bindings."""
+    puzzle = Puzzle.resource2puzzle('extreme3')
+    solution = Puzzle()
+    puzzle.pprint()
+    pypuz = puzzle2pyarray(puzzle)
+    pysol = puzzle2pyarray(solution)
+    diff = [0]
+    retval = solve_puzzle(pypuz, pysol, diff, False)
+    if retval == 0:
+        csol = pyarray2puzzle(pysol)
+        solution.copy(csol)
+    print(f'Difficulty = {diff[0]}')
+    solution.pprint()
+
+if __name__ == '__main__':
+    main()

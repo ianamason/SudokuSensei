@@ -1,7 +1,9 @@
 """A library to store useful routines and keep the clutter to a minimum."""
 
+import os.path
 import argparse
 
+import pkg_resources as pkg
 
 from yices.Types import Types
 from yices.Terms import Terms
@@ -79,10 +81,13 @@ def make_value_map():
 
 def puzzle2pyarray(puzzle):
     """flattens a puzzle to an array of length 81."""
-    retval = []
+    retval = [0] * 81
     matrix = puzzle.grid
     for row in range(9):
-        retval.extend(matrix[row])
+        for col in range(9):
+            val = matrix[row][col]
+            if val is not None:
+                retval[9 * row + col] = val
     return retval
 
 def pyarray2puzzle(pyarray):
@@ -327,6 +332,17 @@ class Puzzle:
                 if row == 9:
                     break
             return Puzzle(matrix)
+
+    @staticmethod
+    def resource2puzzle(name):
+        """creates a puzzle from a named resource (the basename of the file in the data directory)."""
+        if name is None:
+            name = 'empty'
+        board_file = pkg.resource_filename('sudoku', f'data/{name}.sudoku')
+        if not os.path.exists(board_file):
+            raise SudokuError(f'No such board: {board_file}')
+        return Puzzle.path2puzzle(board_file)
+
 
     @staticmethod
     def block(orow, ocol):
