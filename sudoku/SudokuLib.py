@@ -79,26 +79,6 @@ def make_value_map():
     return v2c
 
 
-def puzzle2pyarray(puzzle):
-    """flattens a puzzle to an array of length 81."""
-    retval = [0] * 81
-    matrix = puzzle.grid
-    for row in range(9):
-        for col in range(9):
-            val = matrix[row][col]
-            if val is not None:
-                retval[9 * row + col] = val
-    return retval
-
-def pyarray2puzzle(pyarray):
-    """creates a puzzle from pyarray of length 81."""
-    assert (len(pyarray)) == 81
-    matrix = make_grid()
-    for row in range(9):
-        for col in range(9):
-            matrix[row][col] = pyarray[9 * row + col]
-    return Puzzle(matrix)
-
 class Freedom:
     """Represents simple freedom analysis of a puzzle.
 

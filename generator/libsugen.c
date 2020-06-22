@@ -452,15 +452,11 @@ static int32_t solve(const uint8_t *problem, uint8_t *solution, uint32_t *diff, 
 
     *diff = ctx.branch_score * mult + empty;
 
-    printf("solver returns %d diff %d empty %d\n", ctx.count - 1, diff ? *diff : 0, empty);
+    printf("solver (sofa=%d) returns %d diff %d empty %d\n", sofa, ctx.count - 1, diff ? *diff : 0, empty);
 
   }
 
   return ctx.count - 1;
-}
-
-int32_t db_solve_puzzle(const uint8_t* puzzle, uint8_t* solution, uint32_t* difficultyp, bool sofa){
-  return solve(puzzle, solution, difficultyp, sofa);
 }
 
 /************************************************************************
@@ -703,17 +699,22 @@ static int harden_puzzle(const uint8_t *solution, uint8_t *puzzle, int max_iter,
   return best;
 }
 
+
+/************************************************************************
+ * API
+ *
+ */
+
+
+int32_t db_solve_puzzle(const uint8_t* puzzle, uint8_t* solution, uint32_t* difficultyp, bool sofa){
+  return solve(puzzle, solution, difficultyp, sofa);
+}
+
 void db_generate_puzzle(uint8_t* puzzle, uint32_t* difficultyp, uint32_t difficulty, int32_t max_difficulty, uint32_t iterations, bool sofa){
   uint8_t grid[ELEMENTS];
-
   srandom(time(NULL));
-
   choose_grid(grid);
-
   memcpy(puzzle, grid, ELEMENTS * sizeof(uint8_t));
-
   *difficultyp = harden_puzzle(grid, puzzle, iterations, max_difficulty, difficulty, sofa);
-
   return;
-
 }

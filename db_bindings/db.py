@@ -12,7 +12,9 @@ from ctypes import (
 )
 
 from ctypes.util import find_library
-from sudoku.SudokuLib import SudokuError, Puzzle, puzzle2pyarray, pyarray2puzzle
+
+from sudoku.SudokuLib import SudokuError, Puzzle, make_grid
+
 from sudoku.Constants import DEBUG
 
 def sugen_library_name():
@@ -76,19 +78,53 @@ def make_uint32_array(pyarray):
         retval = (c_uint32 * len(pyarray))(*pyarray)
     return retval
 
+def puzzle2pyarray(puzzle):
+    """flattens a puzzle to an array of length 81."""
+    retval = [0] * 81
+    matrix = puzzle.grid
+    for row in range(9):
+        for col in range(9):
+            val = matrix[row][col]
+            if val is not None:
+                retval[9 * row + col] = val
+    return retval
+
+def pyarray2puzzle(pyarray):
+    """creates a puzzle from pyarray of length 81."""
+    assert (len(pyarray)) == 81
+    matrix = make_grid()
+    for row in range(9):
+        for col in range(9):
+            val = pyarray[9 * row + col]
+            if val != 0:
+                matrix[row][col] = val
+    return Puzzle(matrix)
+
+
 
 success = loadSugen()
 if not success:
     raise SudokuError("Sugen dynamic library not found.")
 
-#void db_generate_puzzle(uint8_t* puzzle, uint32_t* difficultyp, uint32_t difficulty, uint32_t max_difficulty, uint32_t iterations, bool sofa);
-
+#void db_generate_puzzle(uint8_t* puzzle, uint32_t* difficultyp, uint32_t target_difficulty, uint32_t max_difficulty, uint32_t iterations, bool sofa);
+libsugen.db_generate_puzzle.argtypes = [POINTER(c_uint8), POINTER(c_uint32), c_uint32, c_uint32, c_uint32, c_bool]
+def db_generate_puzzle(puzzle, difficultyp, target_difficulty, max_difficulty, iterations, sofa):
+    """call's daniel beer's puzzle generator."""
+    assert len(puzzle) == 81
+    assert len(difficultyp) == 1
+    cpuzzle = make_puzzle_array(puzzle)
+    cdifficultyp = make_uint32_array(difficultyp) if difficultyp is not None else None
+    libsugen.db_generate_puzzle(cpuzzle, cdifficultyp, target_difficulty, max_difficulty, iterations, sofa)
+    difficultyp[0] = cdifficultyp[0]
+    for cell in range(81):
+        puzzle[cell] = cpuzzle[cell]
 
 #int32_t db_solve_puzzle(uint8_t* puzzle, uint8_t* solution, uint32_t* difficultyp, bool sofa);
 libsugen.db_solve_puzzle.restype = c_int32
 libsugen.db_solve_puzzle.argtypes = [POINTER(c_uint8), POINTER(c_uint8), POINTER(c_uint32), c_bool]
-def solve_puzzle(puzzle, solution, difficultyp, sofa):
+def db_solve_puzzle(puzzle, solution, difficultyp, sofa):
     """call's daniel beer's puzzle solver, both solution and difficultyp can be NULL."""
+    # explain the arguments
     assert len(puzzle) == 81
     assert solution is None or len(solution) == 81
     assert difficultyp is None or len(difficultyp) == 1
@@ -103,21 +139,57 @@ def solve_puzzle(puzzle, solution, difficultyp, sofa):
             solution[cell] = csolution[cell]
     return retval
 
+def solve_puzzle(puzzle, sofa):
+    """SudokuSensei interface to Daniel Beer's solver."""
+    pypuz = puzzle2pyarray(puzzle)
+    solution = Puzzle()
+    pysol = puzzle2pyarray(solution)
+    diff = [0]
+    retval = db_solve_puzzle(pypuz, pysol, diff, sofa)
+    if retval == 0:
+        csol = pyarray2puzzle(pysol)
+        solution.copy(csol)
+        return (diff[0], solution)
+    return (0, None)
 
-def main():
-    """test harness for the bindings."""
+def generate_puzzle(target, sofa=False, max_difficulty=-1, iterations=200):
+    """SudokuSensei interface to Daniel Beer's generator."""
+    pypuz = [0] * 81
+    diff = [0]
+    db_generate_puzzle(pypuz, diff, target, max_difficulty, iterations, sofa)
+    puzzle = pyarray2puzzle(pypuz)
+    return (diff[0], puzzle)
+
+def test_solve():
+    """test the solver."""
     puzzle = Puzzle.resource2puzzle('extreme3')
     solution = Puzzle()
     puzzle.pprint()
     pypuz = puzzle2pyarray(puzzle)
     pysol = puzzle2pyarray(solution)
     diff = [0]
-    retval = solve_puzzle(pypuz, pysol, diff, False)
+    retval = db_solve_puzzle(pypuz, pysol, diff, True)
     if retval == 0:
         csol = pyarray2puzzle(pysol)
         solution.copy(csol)
     print(f'Difficulty = {diff[0]}')
     solution.pprint()
+
+def test_generate():
+    """test the generator."""
+    pypuz = [0] * 81
+    diff = [0]
+    db_generate_puzzle(pypuz, diff, 700, -1, 500, True)
+    puzzle = pyarray2puzzle(pypuz)
+    puzzle.pprint()
+    print(f'Difficulty = {diff[0]}')
+
+
+
+def main():
+    """test the bindings."""
+    test_solve()
+    test_generate()
 
 if __name__ == '__main__':
     main()
