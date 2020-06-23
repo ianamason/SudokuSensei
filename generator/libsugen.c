@@ -689,21 +689,20 @@ static int harden_puzzle(const uint8_t *solution, uint8_t *puzzle, int max_iter,
         next[ELEMENTS - c - 1] = 0;
       }
 
-      if (!solve(next, NULL, &s, sofa) &&
-          s > best && (s <= max_score || max_score < 0)) {
+      if (!solve(next, NULL, &s, sofa) && s > best && (s <= max_score || max_score < 0)) {
         memcpy(puzzle, next, sizeof(puzzle[0]) * ELEMENTS);
         best = s;
 
         if (target_score >= 0 && s >= target_score) {
-          if (verbose)
-            printf("iteration: %d\n", i);
+          if (1 || verbose)
+            printf("iteration: %d target_score: %d current: %d\n", i, target_score, best);
           return best;
         }
       }
     }
   }
-  if (verbose)
-    printf("iteration: %d\n", max_iter);
+  if (1 || verbose)
+    printf("max iteration: %d target_score: %d current: %d\n", max_iter, target_score, best);
   return best;
 }
 

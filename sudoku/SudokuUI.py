@@ -19,7 +19,11 @@ from .Constants import DEBUG, TITLE, WIDTH, HEIGHT, PAD, MARGIN, SIDE, ALEPH_NOU
 
 from .SudokuLib import make_cell_map, clear_cell_map
 
+from .SudokuOptions import Options, SudokuOptions
+
 delta = SIDE / 4
+
+
 
 class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
     """The Tkinter UI, responsible for drawing the board and accepting user input."""
@@ -39,6 +43,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         self.row, self.col = -1, -1
         self.freedom = None
         self.notes = make_cell_map()
+        self.options = Options()
         self.__init_ui(parent)
 
 
@@ -91,8 +96,9 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         show_choice.config(width=10)
 
         check_button = tk.Button(parent, text="Check", command=self.__check_puzzle)
-        new_button = tk.Button(parent, text="New Game", command=self.__new_puzzle)
+        new_button = tk.Button(parent, text="New", command=self.__new_puzzle)
         solve_button = tk.Button(parent, text="Solve", command=self.__solve_puzzle)
+        options_button = tk.Button(parent, text="Options", command=self.__show_options)
 
         clear_label.grid(row=0, column=1, sticky="we")
         show_label.grid(row=0, column=2, sticky="we")
@@ -102,6 +108,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         check_button.grid(row=1, column=3, sticky="we")
         new_button.grid(row=1, column=4, sticky="we")
         solve_button.grid(row=1, column=5, sticky="we")
+        options_button.grid(row=1, column=6, sticky="we")
 
 
     def __dispatch_show_choice(self, *args): # pylint: disable=W0613
@@ -140,6 +147,10 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         else:
             pass
         self.__draw_puzzle()
+
+
+    def __show_options(self):
+        SudokuOptions('SudokuSensei Options', self.options)
 
 
     def __draw_grid(self):

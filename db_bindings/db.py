@@ -175,27 +175,30 @@ def test_solve():
     print(f'Difficulty = {diff[0]}')
     solution.pprint()
 
-def test_generate():
+def test_generate(target, iterations, sofa):
     """test the generator."""
     pypuz = [0] * 81
     diff = [0]
-    db_generate_puzzle(pypuz, diff, 700, -1, 500, True)
+    db_generate_puzzle(pypuz, diff, target, -1, iterations, sofa)
     puzzle = pyarray2puzzle(pypuz)
     puzzle.pprint()
-    print(f'Difficulty = {diff[0]}')
+    print(f'Difficulty = {diff[0]} Empty cells: {puzzle.empty_cells}')
 
 
 
 def main():
     """test the bindings."""
-    if False:
+    if True: # pylint: disable=W0125
+        test_generate(700, 10000, True)
+    else:
         test_solve()
-        test_generate()
-
-    for i in range(10):
-        sofa_difficulty, puzzle = generate_puzzle(700, True, iterations=1000)
-        no_sofa_difficulty, solution = solve_puzzle(puzzle, False)
-        print(f'{no_sofa_difficulty}  {sofa_difficulty}   {puzzle.empty_cells}')
+        for _ in range(100):
+            sofa_difficulty, puzzle = generate_puzzle(700, True, iterations=1000)
+            no_sofa_difficulty, _ = solve_puzzle(puzzle, False)
+            if sofa_difficulty > no_sofa_difficulty:
+                print('Counterexample:')
+                puzzle.pprint()
+            print(f'no sofa: {no_sofa_difficulty}  sofa: {sofa_difficulty} empty cells:  {puzzle.empty_cells}')
 
 if __name__ == '__main__':
     main()
