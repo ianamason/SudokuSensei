@@ -12,8 +12,9 @@ class Options:
         self.iterations = 200
 
 
+
 class SudokuOptions(tk.Toplevel):
-    """For configuring what is going on under the hood."""
+    """The UI for letting the user (i.e. me) configure what is going on under the hood."""
 
     def __init__(self, title, options):
         tk.Toplevel.__init__(self)

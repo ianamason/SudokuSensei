@@ -1,6 +1,9 @@
 """python bindings for Daniel Beer's Sudoku Generation library."""
 import os
+import os.path
 import sys
+
+import pkg_resources as pkg
 
 from ctypes import (
     c_bool,
@@ -30,36 +33,19 @@ def sugen_library_name():
         extension = '.dylib'
     return f'{lib_basename}{extension}'
 
-libsugenpath = find_library('sugen')
+libsugen = sugen_library_name()
 
-libsugen = None
+libsugenpath = pkg.resource_filename('sudoku', 'lib/libsugen.dylib')
 
-if libsugenpath is None:
-    libsugenpath = sugen_library_name()
+print(f'libsugenpath = {libsugenpath}')
 
-def _loadSugenFromPath(path, library):
-    global libsugen # pylint: disable=W0603
-    try:
-        where = os.path.join(path, library) if path is not None else library
-        libsugen = CDLL(where)
-        return True
-    except Exception as exception: # pylint: disable=broad-except
-        if DEBUG:
-            sys.stderr.write(f'\nCDLL({where}) raised {exception}.\n')
-        return False
+if not os.path.exists(libsugenpath):
+    raise SudokuError(f'The necessary shared library {libsugenpath} does not exist.')
 
-def loadSugen():
-    """attempts to load the sugen library, relying on CDLL, and using /usr/local/lib as a backup plan."""
-    global libsugenpath # pylint: disable=W0603
-    global libsugen # pylint: disable=W0603
-    if _loadSugenFromPath('./generator', libsugenpath):
-        return True
-    if _loadSugenFromPath(None, libsugenpath):
-        return True
-    if _loadSugenFromPath('/usr/local/lib', libsugenpath):
-        return True
-    return False
+libsugen = CDLL(libsugenpath)
 
+if libsugen is None:
+    raise SudokuError(f'The necessary shared library {libsugenpath} did not load.')
 
 def make_puzzle_array(pyarray):
     """Makes a C term array object from a python array object"""
@@ -102,9 +88,10 @@ def pyarray2puzzle(pyarray):
 
 
 
-success = loadSugen()
-if not success:
-    raise SudokuError("Sugen dynamic library not found.")
+#success = loadSugen()
+
+#if not success:
+#    raise SudokuError("Sugen dynamic library not found.")
 
 #void db_generate_puzzle(uint8_t* puzzle, uint32_t* difficultyp, uint32_t target_difficulty, uint32_t max_difficulty, uint32_t iterations, bool sofa);
 libsugen.db_generate_puzzle.argtypes = [POINTER(c_uint8), POINTER(c_uint32), c_uint32, c_uint32, c_uint32, c_bool]

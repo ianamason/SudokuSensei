@@ -13,7 +13,8 @@
 
 from .SudokuLib import Puzzle, SudokuError
 from .SudokuSolver import SudokuSolver
-from .SudokuGenerator import SudokuGenerator, solve
+from .SudokuGenerator import SudokuGenerator
+from .SudokuOptions import Options
 
 class SudokuGame:
     """
@@ -22,6 +23,7 @@ class SudokuGame:
     """
     def __init__(self, board_name):
         self.board_name = board_name
+        self.options = Options()
         self.start_puzzle = Puzzle.resource2puzzle(board_name)
         self.game_over = False
         # puzzle extends start_puzzle
@@ -38,13 +40,13 @@ class SudokuGame:
 
     def new(self):
         """start commences a newly generated game."""
-        generator = SudokuGenerator()
-        score = generator.generate()
-        generator.puzzle.pprint()
-        print(f'Difficulty: {score} Target: {SudokuGenerator.TGT_DIFF} Empty: {generator.puzzle.empty_cells}')
-        self.start_puzzle = generator.puzzle.clone()
+        generator = SudokuGenerator(self.options)
+        score, puzzle = generator.generate()
+        puzzle.pprint()
+        print(f'Difficulty: {score} Target: {self.options.difficulty} Empty: {puzzle.empty_cells}')
+        self.start_puzzle = puzzle.clone()
         self.start()
-        return (score, SudokuGenerator.TGT_DIFF, generator.puzzle.empty_cells)
+        return (score, self.options.difficulty, puzzle.empty_cells)
 
     def solve(self):
         """solve uses the SMT solver to solve the current game."""
@@ -66,7 +68,8 @@ class SudokuGame:
     def get_difficulty(self):
         """returns the difficulty of the puzzle, as is, or -1 if it is not solvable."""
         diff = [0]
-        code = solve(self.puzzle, None, diff)
+        generator = SudokuGenerator(self.options)
+        code = generator.solve(self.puzzle, None, diff)
         if code == 0:
             return diff[0]
         return -1

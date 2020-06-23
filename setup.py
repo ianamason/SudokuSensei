@@ -1,6 +1,8 @@
 """pip package definition."""
 from os import path
 
+import subprocess
+
 # from distutils.core import setup
 from setuptools import setup, find_packages
 
@@ -12,6 +14,8 @@ here = path.abspath(path.dirname(__file__))
 # Get the long description from the README file
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
+
+subprocess.call(['make', '-C', 'sudoku/lib', 'lib'])
 
 setup(
     name='sudoku',
@@ -26,8 +30,10 @@ setup(
     packages=find_packages(exclude=['tests']),
 
     package_data={
-        "sudoku": ["data/*.sudoku"],
+        "sudoku":  ["data/*.sudoku", "lib/libsugen.*"],
     },
+
+
 
     entry_points={
         'console_scripts': [

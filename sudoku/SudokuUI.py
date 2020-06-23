@@ -19,7 +19,7 @@ from .Constants import DEBUG, TITLE, WIDTH, HEIGHT, PAD, MARGIN, SIDE, ALEPH_NOU
 
 from .SudokuLib import make_cell_map, clear_cell_map
 
-from .SudokuOptions import Options, SudokuOptions
+from .SudokuOptions import SudokuOptions
 
 delta = SIDE / 4
 
@@ -43,7 +43,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         self.row, self.col = -1, -1
         self.freedom = None
         self.notes = make_cell_map()
-        self.options = Options()
+        self.options = game.options()
         self.__init_ui(parent)
 
 

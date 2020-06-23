@@ -6,6 +6,8 @@ from .SudokuLib import SudokuError, Puzzle
 
 from .Constants import DEBUG
 
+from .SudokuOptions import Options
+
 _ELEMENTS = tuple(range(81))
 
 _CELLS = tuple([(row, col) for row in range(9) for col in range(9)])
@@ -133,12 +135,12 @@ class SolveContext:
         self.branch_score = 0
 
 
-def solve(problem, solution, diff):
+def _p_solve(problem, solution, diff):
     """python equivalent to David Beer's solve function."""
     ctx = SolveContext(problem, solution)
     if not problem.sanity_check():
         return -1
-    solve_recurse(ctx, 0)
+    _p_solve_recurse(ctx, 0)
     # calculate a difficulty score
     if diff is not None:
         diff[0] = (ctx.branch_score * 100) + problem.empty_cells
@@ -147,8 +149,8 @@ def solve(problem, solution, diff):
     return ctx.count - 1
 
 
-def solve_recurse(ctx, diff):
-    """python equivalent to David Beer's solve_recurse function."""
+def _p_solve_recurse(ctx, diff):
+    """python equivalent to David Beer's solve_recurse function (no sofa)."""
     least_free_cell = ctx.problem.least_free()
     if least_free_cell is None:
         if ctx.count == 0:
@@ -163,7 +165,7 @@ def solve_recurse(ctx, diff):
     diff += bf * bf
     for val in free:
         ctx.problem.set_cell(row, col, val)
-        solve_recurse(ctx, diff)
+        _p_solve_recurse(ctx, diff)
         if ctx.count >= 2:
             return
     ctx.problem.erase_cell(row, col)
@@ -171,30 +173,37 @@ def solve_recurse(ctx, diff):
 
 class SudokuGenerator:
     """The puzzle generation algorithm of Daniel Beer."""
-    MAX_ITER = 200
-    TGT_DIFF = 450
+
     MAX_DIFF = -1
 
-    def __init__(self):
-        self.puzzle = Puzzle()
-        choose_solution(self.puzzle)
-        self.solution = self.puzzle.clone()
-        self.puzzle.pprint()
+    def __init__(self, options=None):
+        self.options = options if options is not None else Options()
+
+    def solve(self, problem, solution, diff):
+        """solve a puzzle according the user's options."""
+        return  _p_solve(problem, solution, diff)
 
     def generate(self):
         """generate a puzzle, a version of Daniel Beer's harden_puzzle."""
+
+        puzzle = Puzzle()
+        choose_solution(puzzle)
+        solution = puzzle.clone()
+
+        puzzle.pprint()
+
         best = [0]
-        code = solve(self.puzzle, None, best)
+        code = _p_solve(puzzle, None, best)
 
         if code != 0:
             print("Bug")
             return None
 
-        for i in range(SudokuGenerator.MAX_ITER):
+        for i in range(self.options.iterations):
 
             print(f'\tIteration: {i} {best[0]}')
 
-            next_puzzle = self.puzzle.clone()
+            next_puzzle = puzzle.clone()
 
             for j in range(18):
                 sx = [0]
@@ -203,23 +212,23 @@ class SudokuGenerator:
                 r2, c2 = index2cell(81 - cx - 1)
 
                 if flip():
-                    next_puzzle.set_cell(r1, c1, self.solution.get_cell(r1, c1))
-                    next_puzzle.set_cell(r2, c2, self.solution.get_cell(r2, c2))
+                    next_puzzle.set_cell(r1, c1, solution.get_cell(r1, c1))
+                    next_puzzle.set_cell(r2, c2, solution.get_cell(r2, c2))
                 else:
                     next_puzzle.erase_cell(r1, c1)
                     next_puzzle.erase_cell(r2, c2)
 
-                code = solve(next_puzzle, None, sx)
+                code = _p_solve(next_puzzle, None, sx)
 
                 if code == 0:
                     if sx[0] > best[0]:
-                        self.puzzle.copy(next_puzzle)
+                        puzzle.copy(next_puzzle)
                     best[0] = sx[0]
 
-                    if sx[0] >= SudokuGenerator.TGT_DIFF:
+                    if sx[0] >= self.options.difficulty:
                         print(f'Iteration {i} {j}')
-                        return best[0]
+                        return (best[0], puzzle)
 
 
-        print(f'Iteration {SudokuGenerator.MAX_ITER}')
-        return best[0]
+        print(f'Iteration {self.options.iterations}')
+        return (best[0], puzzle)

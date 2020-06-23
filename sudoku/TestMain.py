@@ -7,8 +7,7 @@ import pkg_resources as pkg
 from .SudokuLib import parse_arguments, Puzzle
 from .SudokuGame import SudokuGame
 from .SudokuSolver import SudokuSolver
-from .SudokuGenerator import SudokuGenerator, solve, choose_solution
-
+from .SudokuGenerator import SudokuGenerator, choose_solution
 
 def test0():
     """Quick test of the solution generation code."""
@@ -24,14 +23,15 @@ def main():
 
     board_name = parse_arguments()
 
+    generator = SudokuGenerator()
+
     if board_name is None:
         if False: # pylint: disable=W0125
             test0()
             return
-        generator = SudokuGenerator()
-        score = generator.generate()
-        generator.puzzle.pprint()
-        print(f'Difficulty: {score} Target: {SudokuGenerator.TGT_DIFF} Empty: {generator.puzzle.empty_cells} ')
+        score, puzzle = generator.generate()
+        puzzle.pprint()
+        print(f'Difficulty: {score} Target: {generator.options.difficulty} Empty: {puzzle.empty_cells} ')
         return
 
     board_file = pkg.resource_filename('sudoku', f'data/{board_name}.sudoku')
@@ -57,7 +57,7 @@ def main():
     if smt_solution is None:
         return
 
-    solve(game.puzzle, solution, diff)
+    generator.solve(game.puzzle, solution, diff)
 
     print('\n')
 
