@@ -30,7 +30,7 @@ setup(
     packages=find_packages(exclude=['tests']),
 
     package_data={
-        "sudoku":  ["data/*.sudoku", "lib/libsugen.*"],
+        'sudoku':  ['data/*.sudoku', 'lib/libsugen.*'],
     },
 
 
@@ -46,7 +46,7 @@ setup(
     license='CC4',
 
     install_requires=[
-        "yices >= 1.1.3"
+        'yices >= 1.1.3'
     ],
 
     classifiers=[
@@ -55,6 +55,7 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
+        'Programming Language :: C',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',

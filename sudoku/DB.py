@@ -15,9 +15,9 @@ from ctypes import (
 from pkg_resources import resource_filename
 
 
-from sudoku.SudokuLib import SudokuError, Puzzle, make_grid
+from .SudokuLib import SudokuError, Puzzle, make_grid
 
-from sudoku.Constants import DEBUG
+from .Constants import DEBUG
 
 def sugen_library_name():
     """attempts to guess the name of the sugen library."""
@@ -36,7 +36,7 @@ libsugen = sugen_library_name()
 
 libsugenpath = resource_filename('sudoku', 'lib/libsugen.dylib')
 
-if DEBUG:
+if DEBUG and __name__ == '__main__':
     print(f'Loading libsugen from {libsugenpath}')
 
 if not os.path.exists(libsugenpath):
@@ -121,18 +121,19 @@ def db_solve_puzzle(puzzle, solution, difficultyp, sofa):
             solution[cell] = csolution[cell]
     return retval
 
-def solve_puzzle(puzzle, sofa):
+def solve_puzzle(puzzle, solution, diff, sofa):
     """SudokuSensei interface to Daniel Beer's solver."""
     pypuz = puzzle2pyarray(puzzle)
-    solution = Puzzle()
-    pysol = puzzle2pyarray(solution)
-    diff = [0]
-    retval = db_solve_puzzle(pypuz, pysol, diff, sofa)
+    pysol = puzzle2pyarray(solution) if solution is not None else None
+    difficulty = [0]
+    retval = db_solve_puzzle(pypuz, pysol, difficulty, sofa)
     if retval == 0:
-        csol = pyarray2puzzle(pysol)
-        solution.copy(csol)
-        return (diff[0], solution)
-    return (0, None)
+        if solution is not None:
+            csol = pyarray2puzzle(pysol)
+            solution.copy(csol)
+        if diff is not None:
+            diff[0] = difficulty[0]
+    return retval
 
 def generate_puzzle(target, sofa=False, max_difficulty=-1, iterations=200):
     """SudokuSensei interface to Daniel Beer's generator."""
@@ -176,11 +177,13 @@ def main():
         test_solve()
         for _ in range(100):
             sofa_difficulty, puzzle = generate_puzzle(700, True, iterations=1000)
-            no_sofa_difficulty, _ = solve_puzzle(puzzle, False)
-            if sofa_difficulty > no_sofa_difficulty:
+            no_sofa_difficulty = [0]
+            retval = solve_puzzle(puzzle, None, no_sofa_difficulty, False)
+            assert retval == 0
+            if sofa_difficulty > no_sofa_difficulty[0]:
                 print('Counterexample:')
                 puzzle.pprint()
-            print(f'no sofa: {no_sofa_difficulty}  sofa: {sofa_difficulty} empty cells:  {puzzle.empty_cells}')
+            print(f'no sofa: {no_sofa_difficulty[0]}  sofa: {sofa_difficulty} empty cells:  {puzzle.empty_cells}')
 
 if __name__ == '__main__':
     main()

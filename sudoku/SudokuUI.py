@@ -43,7 +43,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         self.row, self.col = -1, -1
         self.freedom = None
         self.notes = make_cell_map()
-        self.options = game.options()
+        self.options = game.options
         self.__init_ui(parent)
 
 

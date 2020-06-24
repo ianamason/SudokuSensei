@@ -8,6 +8,8 @@ from .Constants import DEBUG
 
 from .SudokuOptions import Options
 
+from .DB import solve_puzzle, generate_puzzle
+
 _ELEMENTS = tuple(range(81))
 
 _CELLS = tuple([(row, col) for row in range(9) for col in range(9)])
@@ -181,9 +183,18 @@ class SudokuGenerator:
 
     def solve(self, problem, solution, diff):
         """solve a puzzle according the user's options."""
-        return  _p_solve(problem, solution, diff)
+        if not self.options.use_c:
+            return  _p_solve(problem, solution, diff)
+        return solve_puzzle(problem, solution, diff, self.options.sofa)
+
 
     def generate(self):
+        """generate a puzzle, either using the python version of Daniel Beer's harden_puzzle, or the actual C."""
+        if not self.options.use_c:
+            return self._p_generate()
+        return generate_puzzle(self.options.difficulty, self.options.sofa, -1, self.options.iterations)
+
+    def _p_generate(self):
         """generate a puzzle, a version of Daniel Beer's harden_puzzle."""
 
         puzzle = Puzzle()

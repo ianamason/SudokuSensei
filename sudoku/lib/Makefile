@@ -15,7 +15,7 @@ endif
 
 all: lib
 
-lib: libsugen.c
+lib: sugen.c
 	${CC} ${CFLAGS} ${LDFLAGS} sugen.c -o ${LIB}
 
 clean:
