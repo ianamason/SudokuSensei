@@ -15,7 +15,7 @@ import tkinter as tk
 
 from tkinter import messagebox
 
-from .Constants import DEBUG, TITLE, WIDTH, HEIGHT, PAD, MARGIN, SIDE, ALEPH_NOUGHT
+from .Constants import TITLE, WIDTH, HEIGHT, PAD, MARGIN, SIDE, ALEPH_NOUGHT
 
 from .SudokuLib import make_cell_map, clear_cell_map
 
@@ -369,7 +369,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         self.row = i
         self.col = j
         self.__draw_cursor()
-        if DEBUG:
+        if self.options.debug:
             print(f'The cell [{i}, {j}] should contain {val}')
         messagebox.showinfo(f'A Hint: {count} rules are needed', hint)
 

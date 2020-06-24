@@ -29,7 +29,7 @@ dist: clean
 	python setup.py bdist_wheel
 
 # If you need to push your project again,
-# change the version number in sudoku/Version.py.
+# change the version number in sudokusensei/Version.py.
 # otherwise the server will give you an error.
 
 # requires an appropriate .pypirc file
@@ -75,10 +75,10 @@ endif
 
 lint: check_lint
 # for detecting just errors:
-	@ $(PYLINT) -E  sudoku/*.py *.py db_bindings/*.py
+	@ $(PYLINT) -E  sudokusensei/*.py *.py
 
 lint_all: check_lint
 # for detecting more than just errors:
-	@ $(PYLINT) --disable=duplicate-code --rcfile=.pylintrc  sudoku/*.py *.py db_bindings/*.py
+	@ $(PYLINT) --disable=duplicate-code --rcfile=.pylintrc  sudokusensei/*.py *.py
 
 .PHONY: lint check_lint rstify check_md2rst

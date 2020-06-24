@@ -42,8 +42,9 @@ class SudokuGame:
         """start commences a newly generated game."""
         generator = SudokuGenerator(self.options)
         score, puzzle = generator.generate()
-        puzzle.pprint()
-        print(f'Difficulty: {score} Target: {self.options.difficulty} Empty: {puzzle.empty_cells}')
+        if self.options.debug:
+            puzzle.pprint()
+            print(f'Difficulty: {score} Target: {self.options.difficulty} Empty: {puzzle.empty_cells}')
         self.start_puzzle = puzzle.clone()
         self.start()
         return (score, self.options.difficulty, puzzle.empty_cells)
@@ -59,7 +60,7 @@ class SudokuGame:
 
     def count_solutions(self):
         """count_solutions returns the number of distinct solutions to the current board."""
-        return self.solver.count_models()
+        return self.solver.count_models(self.options.debug)
 
     def get_hint(self):
         """returns the easiest hint."""

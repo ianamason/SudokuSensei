@@ -10,10 +10,7 @@ from yices.Terms import Terms
 
 from .StringBuilder import StringBuilder
 
-from .Constants import DEBUG
-
 int_t = Types.int_type()
-
 
 class SudokuError(Exception):
     """An application specific error."""
@@ -318,7 +315,7 @@ class Puzzle:
         """creates a puzzle from a named resource (the basename of the file in the data directory)."""
         if name is None:
             name = 'empty'
-        board_file = pkg.resource_filename('sudoku', f'data/{name}.sudoku')
+        board_file = pkg.resource_filename('sudokusensei', f'data/{name}.sudoku')
         if not os.path.exists(board_file):
             raise SudokuError(f'No such board: {board_file}')
         return Puzzle.path2puzzle(board_file)
@@ -373,14 +370,14 @@ class Puzzle:
                         return False
         return True
 
-    def sanity_check(self):
+    def sanity_check(self, debug):
         """a quick sanity check to make sure the puzzle is not obviously unsolvable."""
         for row in range(9):
             for col in range(9):
                 val = self.grid[row][col]
                 if val is not None:
                     if not self.freedom.contains(row, col, val):
-                        if DEBUG:
+                        if debug:
                             print(f'Insane: [{row}, {col}]: {val}')
                         return False
         return True

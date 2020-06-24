@@ -4,7 +4,7 @@ from yices import Census, Context, Model, Terms, Status, Yices
 
 from .SudokuLib import Puzzle, Syntax, Cores
 
-from .Constants import DEBUG, ALEPH_NOUGHT
+from .Constants import ALEPH_NOUGHT
 
 
 class SudokuSolver:
@@ -126,7 +126,7 @@ class SudokuSolver:
 
     #we could contrast the following with the  yices_assert_blocking_clause
 
-    def count_models(self):
+    def count_models(self, debug):
         """count_model returns the number of distinct solutions/models to the current problem."""
         def model2term(model):
             termlist = []
@@ -145,7 +145,7 @@ class SudokuSolver:
         while  context.check_context(None) == Status.SAT:
             model = Model.from_context(context, 1)
             diagram = model2term(model)
-            if DEBUG:
+            if debug:
                 print(f'\nModel #{result + 1}:')
                 puzzle = self.puzzle_from_model(model, True)
                 puzzle.pprint()

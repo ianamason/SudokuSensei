@@ -32,8 +32,13 @@
 #define ELEMENTS    (DIM * DIM)
 
 
-static bool verbose = false;
+static bool debug = false;
 static bool initialized = false;
+
+void db_debug(bool dbg){
+  debug = dbg;
+}
+
 
 /************************************************************************
  * Cell freedom analysis.
@@ -456,7 +461,7 @@ static int32_t solve(const uint8_t *problem, uint8_t *solution, uint32_t *diff, 
 
     *diff = ctx.branch_score * mult + empty;
 
-    if (verbose)
+    if (debug)
       printf("solver (sofa=%d) returns %d diff %d empty %d\n", sofa, ctx.count - 1, diff ? *diff : 0, empty);
 
   }
@@ -672,7 +677,7 @@ static int harden_puzzle(const uint8_t *solution, uint8_t *puzzle, int max_iter,
     uint8_t next[ELEMENTS];
     int j;
 
-    if (verbose)
+    if (debug)
       printf("\tIteration: %d   %d\n", i, best);
 
     memcpy(next, puzzle, sizeof(next));
@@ -694,14 +699,14 @@ static int harden_puzzle(const uint8_t *solution, uint8_t *puzzle, int max_iter,
         best = s;
 
         if (target_score >= 0 && s >= target_score) {
-          if (1 || verbose)
+          if (debug)
             printf("iteration: %d target_score: %d current: %d\n", i, target_score, best);
           return best;
         }
       }
     }
   }
-  if (1 || verbose)
+  if (debug)
     printf("max iteration: %d target_score: %d current: %d\n", max_iter, target_score, best);
   return best;
 }

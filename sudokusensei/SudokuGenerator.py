@@ -4,8 +4,6 @@ import random
 
 from .SudokuLib import SudokuError, Puzzle
 
-from .Constants import DEBUG
-
 from .SudokuOptions import Options
 
 from .DB import solve_puzzle, generate_puzzle
@@ -137,16 +135,16 @@ class SolveContext:
         self.branch_score = 0
 
 
-def _p_solve(problem, solution, diff):
+def _p_solve(problem, solution, diff, debug):
     """python equivalent to David Beer's solve function."""
     ctx = SolveContext(problem, solution)
-    if not problem.sanity_check():
+    if not problem.sanity_check(debug):
         return -1
     _p_solve_recurse(ctx, 0)
     # calculate a difficulty score
     if diff is not None:
         diff[0] = (ctx.branch_score * 100) + problem.empty_cells
-    if DEBUG:
+    if debug:
         print(f'solver returns {ctx.count - 1}  diff {diff[0] if diff is not None else "?"} empty {problem.empty_cells}')
     return ctx.count - 1
 
@@ -184,7 +182,7 @@ class SudokuGenerator:
     def solve(self, problem, solution, diff):
         """solve a puzzle according the user's options."""
         if not self.options.use_c:
-            return  _p_solve(problem, solution, diff)
+            return  _p_solve(problem, solution, diff, self.options.debug)
         return solve_puzzle(problem, solution, diff, self.options.sofa)
 
 
@@ -201,10 +199,11 @@ class SudokuGenerator:
         choose_solution(puzzle)
         solution = puzzle.clone()
 
-        puzzle.pprint()
+        if self.options.debug:
+            puzzle.pprint()
 
         best = [0]
-        code = _p_solve(puzzle, None, best)
+        code = _p_solve(puzzle, None, best, self.options.debug)
 
         if code != 0:
             print("Bug")
@@ -212,7 +211,8 @@ class SudokuGenerator:
 
         for i in range(self.options.iterations):
 
-            print(f'\tIteration: {i} {best[0]}')
+            if self.options.debug:
+                print(f'\tIteration: {i} {best[0]}')
 
             next_puzzle = puzzle.clone()
 
@@ -229,7 +229,7 @@ class SudokuGenerator:
                     next_puzzle.erase_cell(r1, c1)
                     next_puzzle.erase_cell(r2, c2)
 
-                code = _p_solve(next_puzzle, None, sx)
+                code = _p_solve(next_puzzle, None, sx, self.options.debug)
 
                 if code == 0:
                     if sx[0] > best[0]:
@@ -237,9 +237,11 @@ class SudokuGenerator:
                     best[0] = sx[0]
 
                     if sx[0] >= self.options.difficulty:
-                        print(f'Iteration {i} {j}')
+                        if self.options.debug:
+                            print(f'Iteration {i} {j}')
                         return (best[0], puzzle)
 
 
-        print(f'Iteration {self.options.iterations}')
+        if self.options.debug:
+            print(f'Iteration {self.options.iterations}')
         return (best[0], puzzle)

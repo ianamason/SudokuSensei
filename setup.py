@@ -7,7 +7,7 @@ import subprocess
 from setuptools import setup, find_packages
 
 # use the in house version number so we stay in synch with ourselves.
-from sudoku.Version import sudoku_sensei_version
+from sudokusensei.Version import sudoku_sensei_version
 
 here = path.abspath(path.dirname(__file__))
 
@@ -30,15 +30,15 @@ setup(
     packages=find_packages(exclude=['tests']),
 
     package_data={
-        'sudoku':  ['data/*.sudoku', 'lib/libsugen.*'],
+        'sudokusensei':  ['data/*.sudoku', 'lib/libsugen.*'],
     },
 
 
 
     entry_points={
         'console_scripts': [
-            'sudokusensei = sudoku.Main:main',
-            'senseitest = sudoku.TestMain:main',
+            'sudokusensei = sudokusensei.Main:main',
+            'senseitest = sudokusensei.TestMain:main',
         ],
     },
 

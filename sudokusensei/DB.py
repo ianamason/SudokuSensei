@@ -17,8 +17,6 @@ from pkg_resources import resource_filename
 
 from .SudokuLib import SudokuError, Puzzle, make_grid
 
-from .Constants import DEBUG
-
 def sugen_library_name():
     """attempts to guess the name of the sugen library."""
     lib_basename = 'lib' + 'sugen'
@@ -34,10 +32,7 @@ def sugen_library_name():
 
 libsugen = sugen_library_name()
 
-libsugenpath = resource_filename('sudoku', 'lib/libsugen.dylib')
-
-if DEBUG and __name__ == '__main__':
-    print(f'Loading libsugen from {libsugenpath}')
+libsugenpath = resource_filename('sudokusensei', 'lib/libsugen.dylib')
 
 if not os.path.exists(libsugenpath):
     raise SudokuError(f'The necessary shared library {libsugenpath} does not exist.')
@@ -87,6 +82,11 @@ def pyarray2puzzle(pyarray):
     return Puzzle(matrix)
 
 
+#void db_debug(bool dbg);
+libsugen.db_debug.argtypes = [c_bool]
+def db_debug(dbg):
+    """switches on/off 'informative' print statments."""
+    libsugen.db_debug(dbg)
 
 #void db_generate_puzzle(uint8_t* puzzle, uint32_t* difficultyp, uint32_t target_difficulty, uint32_t max_difficulty, uint32_t iterations, bool sofa);
 libsugen.db_generate_puzzle.argtypes = [POINTER(c_uint8), POINTER(c_uint32), c_uint32, c_uint32, c_uint32, c_bool]

@@ -13,10 +13,10 @@ def test0():
     """Quick test of the solution generation code."""
     puzzle = Puzzle()
     choose_solution(puzzle)
-    if not puzzle.sanity_check():
+    if not puzzle.sanity_check(True):
         puzzle.freedom.dump(puzzle)
     puzzle.pprint()
-    print(f'Sanity: {puzzle.sanity_check()} #empty_cells = {puzzle.empty_cells}')
+    print(f'Sanity: {puzzle.sanity_check(True)} #empty_cells = {puzzle.empty_cells}')
 
 def main():
     """main is the pip entry point."""
