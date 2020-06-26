@@ -169,7 +169,7 @@ class SudokuSolver:
             ncore = self.filter_core(core)
             filtered.add(*ncore)
         #print('\nFiltered Cores:\n')
-        smallest = filtered.least(5)
+        smallest = filtered.least(self.game.options.unsat_core_cutoff)
         return smallest
 
     def compute_cores(self, solution):
@@ -208,7 +208,8 @@ class SudokuSolver:
             return None
         core = context.get_unsat_core()
         context.dispose()
-        #print(f'Core: {i} {j} {val}   {len(core)} / {len(self.duplicate_rules)}')
+        if self.game.options.debug:
+            print(f'Unsat Core: {i} {j} {val}   {len(core)} / {len(self.duplicate_rules)}')
         return (i, j, val, core)
 
     def filter_core(self, core):
@@ -225,6 +226,8 @@ class SudokuSolver:
             if smt_stat != Status.UNSAT:
                 filtered.append(term)
         context.dispose()
+        if self.game.options.debug:
+            print(f'Filtered unsat core: {i} {j} {val}   {len(filtered)} / {len(self.duplicate_rules)}')
         return (i, j, val, filtered)
 
     def erasable(self, ctx, i, j, val):
@@ -245,7 +248,7 @@ class SudokuSolver:
         solution = self.solve()
         if solution is None:
             return (None, "There is no solution")
-        cores = self.filter_cores(solution, self.game.options.unsat_cores_cutoff)
+        cores = self.filter_cores(solution, self.game.options.unsat_core_cutoff)
         if cores is None:
             return (None, "There must be a unique solution for a hint")
         i, j, val, terms = cores[0]

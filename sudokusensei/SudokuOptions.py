@@ -189,7 +189,7 @@ class SudokuOptions(tk.Toplevel):
         cutoff.set(self.options.unsat_core_cutoff)
 
         def update_cutoff():
-            self.options.iterations = cutoff.get()
+            self.options.unsat_core_cutoff = cutoff.get()
 
         search = tk.Label(self.checkboxes, text="Search Iterations: ")
         search.grid(row=row, column=0, sticky='w', padx=PADX, pady=PADY)
