@@ -71,7 +71,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         self.clear_var.trace(callback=self.__dispatch_clear_choice, mode='w')
 
         self.show_var = tk.StringVar(parent)
-        self.show_choices = ['', 'Least Free', 'Hint', '# Solutions', 'Freedom', 'Difficulty', 'Sofa', 'Freedom Notes', 'Sanity Check']
+        self.show_choices = ['', 'Least Free', 'Hint', '# Solutions', 'Freedom', 'Difficulty (No Sofa)', 'Difficulty (Sofa)', 'Sofa', 'Freedom Notes', 'Sanity Check']
         self.show_var.set('')
         self.show_var.trace(callback=self.__dispatch_show_choice, mode='w')
 
@@ -83,6 +83,22 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         self.canvas.bind('<Button-1>', self.__cell_clicked)
         self.canvas.bind('<Key>', self.__key_pressed)
 
+
+    def load_game(self, path):
+        """loads the puzzle from the given path."""
+        if self.options.debug:
+            print(f'Loading: {path}')
+        self.game.load(path)
+        self.__draw_grid()
+        self.__draw_puzzle()
+        self.message_text.set('Loaded!')
+
+    def save_game(self, path):
+        """saves the puzzle to the given path."""
+        if self.options.debug:
+            print(f'Saving: {path}')
+        self.game.save(path)
+        self.message_text.set('Saved!')
 
 
     def _create_controls(self, parent):
@@ -121,8 +137,10 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
             self.__show_solution_count()
         elif desire == 'Freedom':
             self.__show_freedom()
-        elif desire == 'Difficulty':
-            self.__show_difficulty()
+        elif desire == 'Difficulty (No Sofa)':
+            self.__show_difficulty(False)
+        elif desire == 'Difficulty (Sofa)':
+            self.__show_difficulty(True)
         elif desire == 'Sofa':
             self.__show_sofa()
         elif desire == 'Freedom Notes':
@@ -150,7 +168,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
 
 
     def __show_options(self):
-        SudokuOptions('SudokuSensei Options', self.options)
+        SudokuOptions(self, 'SudokuSensei Options', self.options)
 
 
     def __draw_grid(self):
@@ -395,13 +413,13 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         self.game.sanity_check()
 
 
-    def __show_difficulty(self):
-        diff = self.game.get_difficulty()
+    def __show_difficulty(self, sofa):
+        diff = self.game.get_difficulty(sofa)
         empty_cells = self.game.get_empty_cell_count()
         if diff < 0:
             self.message_text.set('The puzzle has no solution.')
         else:
-            self.message_text.set(f'The current difficulty metric is: {diff} and {empty_cells} empty cells remaining.')
+            self.message_text.set(f'The ({"Sofa" if sofa else "No Sofa"}) difficulty metric is: {diff} and {empty_cells} remaining.')
 
     def __check_puzzle(self):
         status, wrong = self.game.check()

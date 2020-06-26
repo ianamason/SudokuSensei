@@ -38,6 +38,15 @@ class SudokuGame:
         self.puzzle = self.start_puzzle.clone()
         self.solution = None
 
+    def load(self, path):
+        """loads the puzzle from the given path."""
+        self.start_puzzle = Puzzle.path2puzzle(path)
+        self.start()
+
+    def save(self, path):
+        """saves the puzzle to the given path."""
+        self.puzzle.puzzle2path(path)
+
     def new(self):
         """start commences a newly generated game."""
         generator = SudokuGenerator(self.options)
@@ -66,11 +75,11 @@ class SudokuGame:
         """returns the easiest hint."""
         return self.solver.get_hint()
 
-    def get_difficulty(self):
+    def get_difficulty(self, sofa):
         """returns the difficulty of the puzzle, as is, or -1 if it is not solvable."""
         diff = [0]
         generator = SudokuGenerator(self.options)
-        code = generator.solve(self.puzzle, None, diff)
+        code = generator.solve(self.puzzle, None, diff, sofa)
         if code == 0:
             return diff[0]
         return -1
@@ -110,11 +119,12 @@ class SudokuGame:
 
     def cell_selected(self, row, col):
         """the user has selected the cell, so we can print debugging information."""
-        freedom = self.puzzle.freedom_set(row, col)
-        if freedom is not None:
-            vals = ' '.join([str(x) for x in range(1, 10) if x in freedom])
-            print(f'[{row}, {col}]: {vals}')
-        print(f'least free: {self.puzzle.least_free()}')
+        if self.options.debug:
+            freedom = self.puzzle.freedom_set(row, col)
+            if freedom is not None:
+                vals = ' '.join([str(x) for x in range(1, 10) if x in freedom])
+                print(f'[{row}, {col}]: {vals}')
+            print(f'least free: {self.puzzle.least_free()}')
 
     def least_free(self):
         """returns the least free cell."""

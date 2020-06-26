@@ -179,11 +179,12 @@ class SudokuGenerator:
     def __init__(self, options=None):
         self.options = options if options is not None else Options()
 
-    def solve(self, problem, solution, diff):
+    def solve(self, problem, solution, diff, sofa=None):
         """solve a puzzle according the user's options."""
+        sofa = self.options.sofa if sofa is None else sofa
         if not self.options.use_c:
             return  _p_solve(problem, solution, diff, self.options.debug)
-        return solve_puzzle(problem, solution, diff, self.options.sofa)
+        return solve_puzzle(problem, solution, diff, sofa)
 
 
     def generate(self):

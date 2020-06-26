@@ -157,7 +157,7 @@ class SudokuSolver:
         context.dispose()
         return result
 
-    def filter_cores(self, solution, cutoff=5):
+    def filter_cores(self, solution, cutoff):
         """computes the unsat cores, and then filters the 'cutoff' smallest ones."""
         cores = self.compute_cores(solution)
         if cores is None:
@@ -245,7 +245,7 @@ class SudokuSolver:
         solution = self.solve()
         if solution is None:
             return (None, "There is no solution")
-        cores = self.filter_cores(solution)
+        cores = self.filter_cores(solution, self.game.options.unsat_cores_cutoff)
         if cores is None:
             return (None, "There must be a unique solution for a hint")
         i, j, val, terms = cores[0]
