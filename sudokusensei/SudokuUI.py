@@ -323,7 +323,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
                 self.game.puzzle.erase_cell(self.row, self.col)
             else:
                 notes.clear()
-        elif event.char in '1234567890':
+        elif event.char in '1234567890' and len(event.char) == 1:  #iam: ('' in '123') is True
             self.__handle_input(int(event.char))
         else:
             return
