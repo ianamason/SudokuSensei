@@ -84,6 +84,10 @@ class SudokuGame:
             return diff[0]
         return -1
 
+    def get_metric(self):
+        """computes my notion of difficulty (should be a number between 0 and roughly 100)."""
+        return self.solver.core_metric()
+
     def check(self):
         """Do a quick check that the puzzle is still solvable (i.e. we haven't goofed).
         If it is we return (True, None), otherwise we return (False, wrong) where

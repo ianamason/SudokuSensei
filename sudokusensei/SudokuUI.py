@@ -71,7 +71,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         self.clear_var.trace(callback=self.__dispatch_clear_choice, mode='w')
 
         self.show_var = tk.StringVar(parent)
-        self.show_choices = ['', 'Least Free', 'Hint', '# Solutions', 'Freedom', 'Difficulty (No Sofa)', 'Difficulty (Sofa)', 'Sofa', 'Freedom Notes', 'Sanity Check']
+        self.show_choices = ['', 'Least Free', 'Hint', '# Solutions', 'Freedom', 'Difficulty (No Sofa)', 'Difficulty (Sofa)', 'Difficulty (Cores)', 'Sofa', 'Freedom Notes', 'Sanity Check']
         self.show_var.set('')
         self.show_var.trace(callback=self.__dispatch_show_choice, mode='w')
 
@@ -141,6 +141,8 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
             self.__show_difficulty(False)
         elif desire == 'Difficulty (Sofa)':
             self.__show_difficulty(True)
+        elif desire == 'Difficulty (Cores)':
+            self.__show_metric()
         elif desire == 'Sofa':
             self.__show_sofa()
         elif desire == 'Freedom Notes':
@@ -411,6 +413,14 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
 
     def __sanity_check(self):
         self.game.sanity_check()
+
+    def __show_metric(self):
+        metric = self.game.get_metric()
+        empty_cells = self.game.get_empty_cell_count()
+        if metric < 0:
+            self.message_text.set('The puzzle has no solution.')
+        else:
+            self.message_text.set(f'The unsat core metric is: {metric} and {empty_cells} remaining.')
 
 
     def __show_difficulty(self, sofa):

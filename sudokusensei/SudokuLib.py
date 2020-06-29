@@ -580,3 +580,14 @@ class Cores:
                     if counter >= count:
                         return retval
         return retval
+
+    def metric(self):
+        """ returns my measure of difficulty (should be a number between 0 and roughly 100)."""
+        summation = 0
+        for i in self.core_map:
+            # ugly to have 27 (i.e. |distinct_rules|) hard coded in all these places.
+            count = len(self.core_map[i])
+            cellv = ((2 * i) / 27) * count
+            summation += cellv
+            print(f'{i} : {cellv} {count} {summation}')
+        return int(summation)

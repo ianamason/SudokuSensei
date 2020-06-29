@@ -157,6 +157,20 @@ class SudokuSolver:
         context.dispose()
         return result
 
+    def core_metric(self):
+        """computes my notion of difficulty (should be a number between 0 and roughly 100)."""
+        cutoff = self.game.puzzle.empty_cells
+        solution = self.solve()
+        if solution is None:
+            return -1
+        cores = self.compute_cores(solution)
+        smallest = cores.least(cutoff)
+        filtered = Cores(len(self.duplicate_rules))
+        for core in smallest:
+            ncore = self.filter_core(core)
+            filtered.add(*ncore)
+        return filtered.metric()
+
     def filter_cores(self, solution, cutoff):
         """computes the unsat cores, and then filters the 'cutoff' smallest ones."""
         cores = self.compute_cores(solution)
