@@ -415,6 +415,10 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         self.game.sanity_check()
 
     def __show_metric(self):
+        count = self.game.count_solutions()
+        if count != 1:
+            self.message_text.set('The puzzle does not have exactly one solution.')
+            return
         metric = self.game.get_metric()
         empty_cells = self.game.get_empty_cell_count()
         if metric < 0:
@@ -427,7 +431,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         diff = self.game.get_difficulty(sofa)
         empty_cells = self.game.get_empty_cell_count()
         if diff < 0:
-            self.message_text.set('The puzzle has no solution.')
+            self.message_text.set('The puzzle does not have exactly one solution.')
         else:
             self.message_text.set(f'The ({"Sofa" if sofa else "No Sofa"}) difficulty metric is: {diff} and {empty_cells} remaining.')
 

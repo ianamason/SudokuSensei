@@ -581,7 +581,7 @@ class Cores:
                         return retval
         return retval
 
-    def metric(self):
+    def metric(self, debug):
         """ returns my measure of difficulty (should be a number between 0 and roughly 100)."""
         summation = 0
         for i in self.core_map:
@@ -589,5 +589,6 @@ class Cores:
             count = len(self.core_map[i])
             cellv = ((2 * i) / 27) * count
             summation += cellv
-            print(f'{i} : {cellv} {count} {summation}')
+            if debug:
+                print(f'{i} : {cellv} {count} {summation}')
         return int(summation)

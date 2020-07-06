@@ -6,6 +6,8 @@ from .SudokuLib import Puzzle, Syntax, Cores
 
 from .Constants import ALEPH_NOUGHT
 
+from .Profiling import profile
+
 
 class SudokuSolver:
 
@@ -32,7 +34,8 @@ class SudokuSolver:
 
     def dispose(self): # pylint: disable=R0201
         """dispose cleans up the solver's resources."""
-        print(Census.dump())
+        if self.game.options.debug:
+            print(Census.dump())
         Yices.exit(True)
 
     def var(self, i, j):
@@ -157,8 +160,10 @@ class SudokuSolver:
         context.dispose()
         return result
 
+    @profile
     def core_metric(self):
         """computes my notion of difficulty (should be a number between 0 and roughly 100)."""
+        # this could be improved by doing the filtering in the core computation
         cutoff = self.game.puzzle.empty_cells
         solution = self.solve()
         if solution is None:
@@ -169,7 +174,18 @@ class SudokuSolver:
         for core in smallest:
             ncore = self.filter_core(core)
             filtered.add(*ncore)
-        return filtered.metric()
+        return filtered.metric(self.game.options.debug)
+
+    #this doesn't speed things up!?
+    @profile
+    def _core_metric(self):
+        """computes my notion of difficulty (should be a number between 0 and roughly 100)."""
+        solution = self.solve()
+        if solution is None:
+            return -1
+        cores = self._compute_minimal_cores(solution)
+        return cores.metric(self.game.options.debug)
+
 
     def filter_cores(self, solution, cutoff):
         """computes the unsat cores, and then filters the 'cutoff' smallest ones."""
@@ -201,6 +217,21 @@ class SudokuSolver:
                         cores.add(*core)
         return cores
 
+    def _compute_minimal_cores(self, solution):
+        """computes the MINIMAL unsat cores of all the unfilled cells in the puzzle."""
+        cores = Cores(len(self.duplicate_rules))
+        if solution is not None:
+            for i in range(9):
+                for j in range(9):
+                    slot = self.game.puzzle.get_cell(i, j)
+                    if slot is None:
+                        ans = solution.get_cell(i, j)
+                        core = self._compute_minimal_core(i, j, ans)
+                        if core is None:
+                            return None
+                        cores.add(*core)
+        return cores
+
     def compute_core(self, i, j, val):
         """We compute the unsat core of the duplicate_rules when asserting self.var(i, j) != val w.r.t the puzzle (val is assumed to be the unique solution)."""
         if not (0 <= i <= 8 and 0 <= j <= 8 and 1 <= val <= 9):
@@ -212,12 +243,13 @@ class SudokuSolver:
         smt_stat = context.check_context_with_assumptions(None, self.duplicate_rules)
         # a valid puzzle should have a unique solution, so this should not happen, if it does we bail
         if smt_stat != Status.UNSAT:
-            #print(f'Error: {i} {j} {val} - not UNSAT: {Status.name(smt_stat)}')
-            model = Model.from_context(context, 1)
-            answer = self.puzzle_from_model(model)
-            #print('Counter example (i.e. origonal puzzle does not have a unique solution):')
-            answer.pprint()
-            model.dispose()
+            if self.game.options.debug:
+                #print(f'Error: {i} {j} {val} - not UNSAT: {Status.name(smt_stat)}')
+                model = Model.from_context(context, 1)
+                answer = self.puzzle_from_model(model)
+                #print('Counter example (i.e. origonal puzzle does not have a unique solution):')
+                answer.pprint()
+                model.dispose()
             context.dispose()
             return None
         core = context.get_unsat_core()
@@ -225,6 +257,38 @@ class SudokuSolver:
         if self.game.options.debug:
             print(f'Unsat Core: {i} {j} {val}   {len(core)} / {len(self.duplicate_rules)}')
         return (i, j, val, core)
+
+    def _compute_minimal_core(self, i, j, val):
+        """We compute the MINIMAL unsat core of the duplicate_rules when asserting self.var(i, j) != val w.r.t the puzzle (val is assumed to be the unique solution)."""
+        if not (0 <= i <= 8 and 0 <= j <= 8 and 1 <= val <= 9):
+            raise Exception(f'Index error: {i} {j} {val}')
+        context = Context()
+        self.assert_puzzle(context, self.game.puzzle)
+        self.assert_not_value(context, i, j, val)
+        self.assert_trivial_rules(context)
+        smt_stat = context.check_context_with_assumptions(None, self.duplicate_rules)
+        # a valid puzzle should have a unique solution, so this should not happen, if it does we bail
+        if smt_stat != Status.UNSAT:
+            if self.game.options.debug:
+                #print(f'Error: {i} {j} {val} - not UNSAT: {Status.name(smt_stat)}')
+                model = Model.from_context(context, 1)
+                answer = self.puzzle_from_model(model)
+                #print('Counter example (i.e. origonal puzzle does not have a unique solution):')
+                answer.pprint()
+                model.dispose()
+            context.dispose()
+            return None
+        core = context.get_unsat_core()
+        filtered = core.copy()
+        for term in core:
+            filtered.remove(term)
+            smt_stat = context.check_context_with_assumptions(None, filtered)
+            if smt_stat != Status.UNSAT:
+                filtered.append(term)
+        context.dispose()
+        if self.game.options.debug:
+            print(f'Unsat Core: {i} {j} {val}   {len(core)} / {len(self.duplicate_rules)}')
+        return (i, j, val, filtered)
 
     def filter_core(self, core):
         """given a core, removes every unnecessary member until it has a minimal core."""
