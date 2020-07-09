@@ -23,7 +23,7 @@ there describes the process.
 
 So you can either do
 ```
-pip install sudoku
+pip install sudokusensei
 ```
 or if you want to hack, clone this repository and do
 ```
