@@ -68,8 +68,8 @@ class SudokuOptions(tk.Toplevel):
         load_button.grid(row=1, column=2, sticky="e", padx=PADX, pady=PADY)
 
 
-    def _get_resource_directory(self):
-        if self.options.debug:
+    def _get_resource_directory(self, saving=False):
+        if not saving or self.options.debug:
             empty_file = pkg.resource_filename('sudokusensei', 'data/empty.sudoku')
             if os.path.exists(empty_file):
                 return os.path.dirname(empty_file)
@@ -78,16 +78,18 @@ class SudokuOptions(tk.Toplevel):
 
 
     def __save_puzzle(self):
-        filename = filedialog.asksaveasfilename(initialdir=self._get_resource_directory(), filetypes=[('Sudoku', '*.sudoku')], initialfile='game.sudoku')
+        """don't use the data directory as the default when writing (since it may be write protected)"""
+        filename = filedialog.asksaveasfilename(initialdir=self._get_resource_directory(True), filetypes=[('Sudoku', '*.sudoku')], initialfile='game.sudoku')
         if filename is not None and len(filename) > 0:
             self.game_ui.save_game(filename)
+            self.destroy()
 
 
     def __load_puzzle(self):
         filename = filedialog.askopenfilename(initialdir=self._get_resource_directory(), initialfile='game.sudoku')
         if filename is not None and len(filename) > 0 and os.path.exists(filename):
             self.game_ui.load_game(filename)
-
+            self.destroy()
 
 
     def _create_debug_controls(self, row):
