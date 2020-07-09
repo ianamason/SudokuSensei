@@ -1,4 +1,6 @@
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-blueviolet.svg)](https://creativecommons.org/licenses/by/4.0/)
+[![PyPI version](https://badge.fury.io/py/sudokusensei.svg)](https://badge.fury.io/py/sudokusensei)
+[![PyPI Statistics](https://img.shields.io/pypi/dm/sudokusensei.svg)](https://pypistats.org/packages/sudokusensei)
 
 # SudukoSensei
 
@@ -13,7 +15,7 @@ The tool is in a pretty good state. Play with it. Let me know what else it needs
 
 You need a newish Python, I quite like and make use of the new format strings, so you will need at least 3.6.
 
-The software is packaged as a pip package, but to install it successfully you will *first* 
+The software is packaged as a pip package, but to install it successfully you will *first*
 need to install [yices](https://github.com/SRI-CSL/yices2) which can be done by building from source,
 or using apt on linux (from our PPA) or homebrew on a mac, the [README.md](https://github.com/SRI-CSL/yices2/blob/master/README.md)
 there describes the process.
@@ -33,7 +35,7 @@ There is a make file that will build and install the package. Once installed, yo
 ```
 sudokusensei
 ```
-If you press the options button you will be able to load one of our many predefined boards in the  
+If you press the options button you will be able to load one of our many predefined boards in the
 [data](https://github.com/ianamason/SudokuSensei/tree/master/sudoku/data) directory,
 and you can also directly launch one of these via
 ```
@@ -53,7 +55,7 @@ sudokusensei --board  hardest
 which will start you off with the puzzle that Finnish mathematician [Arto Inkala](http://www.aisudoku.com/index_en.html)
 [claimed](https://www.conceptispuzzles.com/index.aspx?uri=info/article/424) is the hardest one possible.
 
-Once you have the puppy up you can always generate new puzzles.  The options tab will allow you to attempt to specify the 
+Once you have the puppy up you can always generate new puzzles.  The options tab will allow you to attempt to specify the
 level of difficulty of the generated puzzle.
 
 You can even use the tool to create your own Sudoku puzzles, just start with an empty board, and make use of the `Show > # Solutions`

@@ -11,10 +11,8 @@ help:
 	@echo ''
 	@echo 'To publish                :  "make publish"'
 	@echo ''
-	@echo 'To turn README.rst 2 html :  "make zippity"'
 	@echo 'To pylint (errors)        :  "make lint"'
 	@echo 'To pylint (all)           :  "make lint_all"'
-	@echo 'To update the README.rst  :  "make rstify"'
 
 	@echo ''
 
@@ -36,33 +34,11 @@ dist: clean
 publish: dist
 	python -m twine upload --repository pypi dist/*
 
-
-PANDOC = $(shell which pandoc)
-
-check_pandoc:
-ifeq ($(PANDOC),)
-	$(error lint target requires pandoc)
-endif
-
-
-zippity: check_pandoc
-	rm -rf doczip*; mkdir doczip;
-	cat README.rst | pandoc -f rst > doczip/index.html
-	zip -r -j doczip.zip doczip
-
-MD2RST = $(shell which mdToRst)
-
-check_md2rst:
-ifeq ($(MD2RST),)
-	$(error rstify target requires mdToRst)
-endif
-
-rstify: check_md2rst
-	mdToRst README.md > README.rst
-
-
 clean:
 	rm -rf  *~ */*~ */*/*~ */__pycache__
+
+spotless:  clean
+	rm -rf dist build
 
 PYLINT = $(shell which pylint)
 

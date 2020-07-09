@@ -12,16 +12,17 @@ from sudokusensei.Version import sudoku_sensei_version
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
-with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
+with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 subprocess.call(['make', '-C', 'sudoku/lib', 'lib'])
 
 setup(
-    name='sudoku',
+    name='sudokusensei',
     version=sudoku_sensei_version,
     description='The SMT Sudoku Sensei',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     url='https://github.com/ianamason/SudokuSensei',
     author='Ian A. Mason',
     author_email='iam@csl.sri.com',
