@@ -69,6 +69,19 @@ feature to make sure your puzzle has a *unique* solution. You can save it from t
 The tool can do lots of things. Instead of writing a well structured guide, I am going to just list the features
 as they occur to me. Sorry.
 
+### Notes: 
+
+You can make notes by simply entering multiple numbers, the same number entered twice will toggle that number in or out.
+If you are really lazy you can start off your notes from the freedom analysis (`Show > Freedom Notes`).
+
+![Freedom-Notes](img/freedom-notes.png?raw_true)
+
+
+### Check 
+
+You can see if you are on the right track by pressing the `Check` button. The UI is in a primitive state, and maybe
+I will get around to highlighting the wrong squares rather than just *naming* them.
+
 ### Freedom Analysis: 
 
 The freedom analysis assigns to each empty cell the set of legal possibilities for that cell. I.e. choices that do 
@@ -123,15 +136,7 @@ there is not much coding left.
 is good, so one can see the progress being made.
 
 
-### Notes: 
-
-You can make notes by simply entering multiple numbers, the same number entered twice will toggle that number in or out.
-If you are really lazy you can start off your notes from the freedom analysis (`Show > Freedom Notes`).
-
-![Freedom-Notes](img/freedom-notes.png?raw_true)
-
-
-###  Solving
+##  Solving
 
 You can solve the current puzzle by just pressing the `Solve` button. This uses the SMT solver, rather than the
 two other techniques. Solving is easy, so not much to say here.
