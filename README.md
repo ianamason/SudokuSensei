@@ -59,6 +59,8 @@ which will start you off with the puzzle that Finnish mathematician [Arto Inkala
 Once you have the puppy up you can always generate new puzzles.  The options tab will allow you to attempt to specify the
 level of difficulty of the generated puzzle.
 
+![Options](img/options-tab.png?raw_true)
+
 You can even use the tool to create your own Sudoku puzzles, just start with an empty board, and make use of the `Show > # Solutions`
 feature to make sure your puzzle has a *unique* solution. You can save it from the options tab.
 
@@ -67,12 +69,16 @@ feature to make sure your puzzle has a *unique* solution. You can save it from t
 The tool can do lots of things. Instead of writing a well structured guide, I am going to just list the features
 as they occur to me. Sorry.
 
-* Freedom Analysis: you can look at the freedom analysis of the puzzle via `Show > Freedom`, and get rid of them via
+### Freedom Analysis: 
+
+You can look at the freedom analysis of the puzzle via `Show > Freedom`, and get rid of them via
 `Clear > Freedom`.
 
 ![Freedom](img/freedom.png?raw_true)
 
-* Notes: you can make notes by simply entering multiple numbers, the same number entered twice will toggle that number in or out.
+### Notes: 
+
+You can make notes by simply entering multiple numbers, the same number entered twice will toggle that number in or out.
 If you are really lazy you can start off your notes from the freedom analysis (`Show > Freedom Notes`).
 
 ![Freedom-Notes](img/freedom-notes.png?raw_true)
