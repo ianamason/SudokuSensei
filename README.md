@@ -107,6 +107,21 @@ is a metric, and is basically  proportional to the sum of the sizes of all the m
 computationally expensive to calculate, but does provide me with a good example for which to use threads and 
 thread safe yices, so I will probably spend some more time on this in the not to distant future.
 
+### Generating Difficult Puzzles
+
+Generating difficult puzzles quickly is difficult. 
+We again rely on the earlier work of Daniel Beer.
+To generate a new puzzle just press the `New` button.
+The options tab has several parameters that affect what happens under the
+hood once this button is pressed. You can choose the language (`C` or `Python`)
+in which the search takes place, the tye of search algorithm used (`Sofa` or `No Sofa`).
+The target difficulty, and how long one searches for a suitable puzzle.
+Not all the Python options have been implemented (In particular Sofa search). But 
+there is not much coding left.
+
+*Warning* using Python as the language requires patience, and being in debug mode
+is good, so one can see the progress being made.
+
 
 ### Notes: 
 
