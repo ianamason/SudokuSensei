@@ -130,6 +130,12 @@ If you are really lazy you can start off your notes from the freedom analysis (`
 
 ![Freedom-Notes](img/freedom-notes.png?raw_true)
 
+
+###  Solving
+
+You can solve the current puzzle by just pressing the `Solve` button. This uses the SMT solver, rather than the
+two other techniques. Solving is easy, so not much to say here.
+
 ## Acknowledgments
 
 This project was built on top of the nice python [tutorial](http://newcoder.io/gui/) by [@econchic](http://www.roguelynn.com/)
