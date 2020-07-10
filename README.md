@@ -100,10 +100,12 @@ a simple upper bound cutoff called `aleph_nought` that you can configure in the 
 
 Estimating the difficulty of a puzzle is also hard. We provide three, two are branch-difficulty measures of two 
 different backtracking solution search algorithms presented in [[3]](https://dlbeer.co.nz/articles/sudoku.html).
-These are some what adhoc in congruent puzzles (via the natural symmetries) will have different difficulties.
+These are somewhat adhoc in congruent puzzles (via the natural symmetries) will have different difficulties.
 `Show > Difficulty (No Sofa)` and `Show > Difficulty (Sofa)` give these values (ranging from 0 to above 1000).
 We also present another metric (that we cooked up) but this takes time to compute, so be patient. It
-is a metric, and is basically  proportional to the sum of the sizes of all the minimal unsat cores.
+is a metric, and is basically  proportional to the sum of the sizes of all the minimal unsat cores. This is
+computationally expensive to calculate, but does provide me with a good example for which to use threads and 
+thread safe yices, so I will probably spend some more time on this in the not to distant future.
 
 
 ### Notes: 
