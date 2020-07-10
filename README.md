@@ -71,10 +71,40 @@ as they occur to me. Sorry.
 
 ### Freedom Analysis: 
 
+The freedom analysis assigns to each empty cell the set of legal possibilities for that cell. I.e. choices that do 
+not obviously violate 
 You can look at the freedom analysis of the puzzle via `Show > Freedom`, and get rid of them via
 `Clear > Freedom`.
 
 ![Freedom](img/freedom.png?raw_true)
+
+### Least Free
+
+As the most primitve kind of hint, one can ask for the least free cell via `Show > Least Free` which will highlight
+the cell with the smallest freedom set.
+
+### Hints
+
+You can ask for a hint. Hints are hard. What we do is compute the minimal unsat core for each empty cell (with
+some optimizations: see the `cutoff` in the options tab) and point out a cell with the smallest such core. This is usually a good indication that 
+the cell can be solved relatively easily by a human. Though of course wth really hard puzzles these are still really hard
+to solve. If you on debugging you will even see (in the console) the actual answer. But don't cheat, you won'y feel better for it.
+
+### Counting Solutions
+
+A legal puzzle should have exactly one solution, but when you are designing your own you may have many solutions.
+You can count the number of solutions via `Show > # Solutions`. This computation could take a long time, so we have 
+a simple upper bound cutoff called `aleph_nought` that you can configure in the options tab.
+
+### Estimating Difficulty
+
+Estimating the difficulty of a puzzle is also hard. We provide three, two are branch-difficulty measures of two 
+different backtracking solution search algorithms presented in [[3]](https://dlbeer.co.nz/articles/sudoku.html).
+These are some what adhoc in congruent puzzles (via the natural symmetries) will have different difficulties.
+`Show > Difficulty (No Sofa)` and `Show > Difficulty (Sofa)` give these values (ranging from 0 to above 1000).
+We also present another metric (that we cooked up) but this takes time to compute, so be patient. It
+is a metric, and is basically  proportional to the sum of the sizes of all the minimal unsat cores.
+
 
 ### Notes: 
 
