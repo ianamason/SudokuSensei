@@ -66,7 +66,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
         self.messagebox.pack(side="top", fill="both", pady=2*PAD, expand=True)
 
         self.clear_var = tk.StringVar(parent)
-        self.clear_choices = ['', 'Freedom', 'Notes', 'Puzzle', 'Solution']
+        self.clear_choices = ['', 'Freedom', 'Notes', 'Puzzle', 'Solution', 'Message']
         self.clear_var.set('')
         self.clear_var.trace(callback=self.__dispatch_clear_choice, mode='w')
 
@@ -164,6 +164,8 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
             self.__clear_puzzle()
         elif desire == 'Solution':
             self.__clear_solution()
+        elif desire == 'Message':
+            self.__clear_messages()
         else:
             pass
         self.__draw_puzzle()
