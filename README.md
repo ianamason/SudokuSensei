@@ -70,9 +70,12 @@ as they occur to me. Sorry.
 * Freedom Analysis: you can look at the freedom analysis of the puzzle via `Show > Freedom`, and get rid of them via
 `Clear > Freedom`.
 
+![Freedom](img/freedom.png?raw_true)
+
 * Notes: you can make notes by simply entering multiple numbers, the same number entered twice will toggle that number in or out.
 If you are really lazy you can start off your notes from the freedom analysis (`Show > Freedom Notes`).
 
+![Freedom-Notes](img/freedom-notes.png?raw_true)
 
 ## Acknowledgments
 
