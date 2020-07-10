@@ -129,7 +129,7 @@ class SudokuOptions(tk.Toplevel):
         def update_edit():
             self.options.edit = edit.get()
 
-        editing = tk.Label(self.checkboxes, text="Editging: ")
+        editing = tk.Label(self.checkboxes, text="Editing: ")
         editing.grid(row=row, column=0, sticky='w', padx=PADX, pady=PADY)
 
         use_edit = tk.Radiobutton(self.checkboxes, text='Editing', variable=edit, value=True, command=update_edit)
