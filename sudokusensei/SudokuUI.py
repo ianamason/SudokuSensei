@@ -15,7 +15,7 @@ import tkinter as tk
 
 from tkinter import messagebox
 
-from .Constants import TITLE, WIDTH, HEIGHT, PAD, MARGIN, SIDE, ALEPH_NOUGHT
+from .Constants import TITLE, WIDTH, HEIGHT, PAD, MARGIN, SIDE
 
 from .SudokuLib import make_cell_map, clear_cell_map
 
@@ -282,7 +282,7 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
             if (row, col) == (self.row, self.col):
                 self.row, self.col = -1, -1
             #iam: the elif choice makes an original entry permanent.
-            elif self.game.start_puzzle.get_cell(row, col) is not None:
+            elif self.game.start_puzzle.get_cell(row, col) is not None and not self.options.edit:
                 return
             else:
                 self.row, self.col = row, col
@@ -368,10 +368,10 @@ class SudokuUI(tk.Frame): # pylint: disable=R0901,R0902
             text = 'There are no solutions.'
         elif count == 1:
             text = 'There is a unique solution.'
-        elif count < ALEPH_NOUGHT:
+        elif count < self.options.aleph_nought:
             text = f'There are {count} solutions'
         else:
-            text = f'There are >= {ALEPH_NOUGHT} solutions'
+            text = f'There are >= {self.options.aleph_nought} solutions'
         self.message_text.set(text)
 
     def __show_least_free(self):

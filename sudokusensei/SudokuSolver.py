@@ -4,10 +4,7 @@ from yices import Census, Context, Model, Terms, Status, Yices
 
 from .SudokuLib import Puzzle, Syntax, Cores
 
-from .Constants import ALEPH_NOUGHT
-
 from .Profiling import profile
-
 
 class SudokuSolver:
 
@@ -155,7 +152,7 @@ class SudokuSolver:
             context.assert_formula(Terms.ynot(diagram))
             model.dispose()
             result += 1
-            if result == ALEPH_NOUGHT:
+            if result >= self.game.options.aleph_nought:
                 break
         context.dispose()
         return result
