@@ -4,7 +4,7 @@
 
 # SudukoSensei
 
-![SudukoSensei](img/sudukosensei.png?raw_true)
+![SudokuSensei](img/sudokusensei.png?raw_true)
 
 A Playground for testing our SMT's python bindings, learning tkinter, solving Sudoku puzzles, trying to give hints, and delving into
 the intracies of generating sudoku puzzles, measuring their difficulty, and the list goes on.
@@ -23,7 +23,7 @@ there describes the process.
 
 So you can either do
 ```
-pip install sudoku
+pip install sudokusensei
 ```
 or if you want to hack, clone this repository and do
 ```
