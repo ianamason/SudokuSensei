@@ -54,7 +54,7 @@ Another example would be
 sudokusensei --board  hardest
 ```
 which will start you off with the puzzle that Finnish mathematician [Arto Inkala](http://www.aisudoku.com/index_en.html)
-[claimed](https://www.conceptispuzzles.com/index.aspx?uri=info/article/424) is the hardest one possible.
+[claimed](https://www.conceptispuzzles.com/index.aspx?uri=info/article/424) is the hardest one possible, see the screen shot above.
 
 Once you have the puppy up you can always generate new puzzles.  The options tab will allow you to attempt to specify the
 level of difficulty of the generated puzzle.
