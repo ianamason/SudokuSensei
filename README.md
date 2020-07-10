@@ -62,7 +62,7 @@ level of difficulty of the generated puzzle.
 You can even use the tool to create your own Sudoku puzzles, just start with an empty board, and make use of the `Show > # Solutions`
 feature to make sure your puzzle has a *unique* solution. You can save it from the options tab.
 
-## Bells and Whistles
+## Bells and Whistles  (AKA Freeping Creaturism)
 
 The tool can do lots of things. Instead of writing a well structured guide, I am going to just list the features
 as they occur to me. Sorry.
@@ -84,8 +84,8 @@ not appear to be an option in GitHub's license widget, consequently I choose the
 ## References
 
 
-* [The Math behind Sudoku](http://pi.math.cornell.edu/~mec/Summer2009/Mahmood/Intro.html)
+* [[1]](http://pi.math.cornell.edu/~mec/Summer2009/Mahmood/Intro.html) The Math behind Sudoku. Cornell Math Explorer's Club.
 
-* [Graphical User Interfaces](http://newcoder.io/gui/)
+* [[2]](http://newcoder.io/gui/) Graphical User Interfaces. Lynn Root.
 
-* [Generating difficult Sudoku puzzles quickly](https://dlbeer.co.nz/articles/sudoku.html)
+* [[3]](https://dlbeer.co.nz/articles/sudoku.html) Generating difficult Sudoku puzzles quickly. Daniel Beer.
