@@ -110,8 +110,10 @@ class SudokuGame:
 
     def sanity_check(self):
         """this is for debugging, we check that all our data structures make sense."""
-        print(f'puzzle.sanity_check() = {self.puzzle.sanity_check()}')
-        print(f'puzzle.sanity_check_sofa() = {self.puzzle.sanity_check_sofa()}')
+        if self.options.debug:
+            print(f'puzzle.sanity_check() = {self.puzzle.sanity_check(self.options.debug)}')
+            print(f'puzzle.sanity_check_sofa() = {self.puzzle.sanity_check_sofa()}')
+
 
     def get_empty_cell_count(self):
         """returns the number of empty cells in the current puzzle."""

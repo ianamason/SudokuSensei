@@ -47,7 +47,7 @@ setup(
     license='CC4',
 
     install_requires=[
-        'yices >= 1.1.3'
+        'yices >= 1.1.4'
     ],
 
     classifiers=[
