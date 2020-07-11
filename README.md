@@ -85,7 +85,7 @@ I will get around to highlighting the wrong squares rather than just *naming* th
 ### Freedom Analysis
 
 The freedom analysis assigns to each empty cell the set of legal possibilities for that cell. I.e. choices that do 
-not obviously violate 
+not obviously violate the uniqueness axioms.
 You can look at the freedom analysis of the puzzle via `Show > Freedom`, and get rid of them via
 `Clear > Freedom`.
 
