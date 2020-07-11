@@ -100,8 +100,8 @@ the cell with the smallest freedom set.
 
 You can ask for a hint. Hints are hard. What we do is compute the minimal unsat core for each empty cell (with
 some optimizations: see the `cutoff` in the options tab) and point out a cell with the smallest such core. This is usually a good indication that 
-the cell can be solved relatively easily by a human. Though of course wth really hard puzzles these are still really hard
-to solve. If you on debugging you will even see (in the console) the actual answer. But don't cheat, you won'y feel better for it.
+the cell can be solved relatively easily by a human. Though of course with really hard puzzles these are still really hard
+to solve. If you turn on debugging via the options tab, you will even see (in the console) the actual answer. But don't cheat, you won't feel better for it.
 
 ### Counting Solutions
 
